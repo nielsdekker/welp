@@ -2,6 +2,8 @@ package module
 
 import (
 	"net/url"
+
+	"github.com/nielsdekker/welp/internal/requests"
 )
 
 type Module interface {
@@ -16,14 +18,17 @@ type Result interface {
 }
 
 type URLResult struct {
-	foundIn    *url.URL
-	URL        *url.URL
-	StatusCode int
+	foundIn        *url.URL
+	URL            *url.URL
+	StatusCode     int
+	ContentType    requests.ContentType
+	RawContentType string
 }
 
 type TokenResult struct {
-	foundIn *url.URL
-	Token   string
+	foundIn   *url.URL
+	Token     string
+	TokenType string
 }
 
 func (u URLResult) FoundIn() *url.URL {

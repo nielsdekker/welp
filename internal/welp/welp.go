@@ -10,12 +10,12 @@ import (
 	"github.com/nielsdekker/welp/internal/requests"
 )
 
-type welp struct {
-	Target  *url.URL
-	Modules []module.Module
+type Welp struct {
+	Target *url.URL
 
+	modules     []module.Module
 	requestPool requests.Pool
-	Results     map[*url.URL][]module.Result
+	results     map[*url.URL][]module.Result
 	crawledUrls map[*url.URL]struct{}
 }
 
@@ -23,18 +23,18 @@ func New(
 	target *url.URL,
 	requestPool requests.Pool,
 	modules []module.Module,
-) welp {
-	return welp{
+) Welp {
+	return Welp{
 		Target:  target,
-		Modules: modules,
+		modules: modules,
 
 		requestPool: requestPool,
-		Results:     make(map[*url.URL][]module.Result),
+		results:     make(map[*url.URL][]module.Result),
 		crawledUrls: make(map[*url.URL]struct{}),
 	}
 }
 
-func (w welp) Crawl(ctx context.Context) {
+func (w Welp) Crawl(ctx context.Context) {
 	urlChannel := make(chan *url.URL)
 	resultChannel := make(chan []module.Result, 100)
 
@@ -44,7 +44,7 @@ func (w welp) Crawl(ctx context.Context) {
 				stringValues := w.fetch(newTargetUrl)
 				results := []module.Result{}
 
-				for _, m := range w.Modules {
+				for _, m := range w.modules {
 					results = append(results, m.Handle(newTargetUrl, stringValues)...)
 				}
 
@@ -75,21 +75,18 @@ func (w welp) Crawl(ctx context.Context) {
 							w.crawledUrls[v.URL] = struct{}{}
 						}
 
-						// TODO Make this configurable, skipping 404 is a good
-						// default though
+						// Not yet crawled the found URL so start crawling
+						w.results[r.FoundIn()] = append(w.results[r.FoundIn()], r)
+
 						if v.StatusCode == 404 {
-							// 404 break, prevents crawling 404 error page that
-							// has a relative path somewhere. Results in a
-							// "forever" crawl
+							// 404 break, no need to crawl non existing pages
 							break
 						}
 
-						// Not yet crawled the found URL so start crawling
-						w.Results[r.FoundIn()] = append(w.Results[r.FoundIn()], r)
 						urlChannel <- v.URL
 						counter++
 					case module.TokenResult:
-						w.Results[r.FoundIn()] = append(w.Results[r.FoundIn()], r)
+						w.results[r.FoundIn()] = append(w.results[r.FoundIn()], r)
 					}
 				}
 
@@ -104,7 +101,7 @@ func (w welp) Crawl(ctx context.Context) {
 }
 
 // Calls the given url, then retrieves all string like values from it
-func (w welp) fetch(targetURL *url.URL) map[string]struct{} {
+func (w Welp) fetch(targetURL *url.URL) map[string]struct{} {
 	foundStrings := make(map[string]struct{})
 	getRes, err := w.requestPool.Do(&http.Request{
 		Method: http.MethodGet,
@@ -174,4 +171,22 @@ func (w welp) fetch(targetURL *url.URL) map[string]struct{} {
 	}
 
 	return foundStrings
+}
+
+func (w Welp) AllResults() ([]module.URLResult, []module.TokenResult) {
+	urlResults := []module.URLResult{}
+	tokenResults := []module.TokenResult{}
+
+	for _, v := range w.results {
+		for _, r := range v {
+			switch v := r.(type) {
+			case module.URLResult:
+				urlResults = append(urlResults, v)
+			case module.TokenResult:
+				tokenResults = append(tokenResults, v)
+			}
+		}
+	}
+
+	return urlResults, tokenResults
 }
