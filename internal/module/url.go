@@ -85,9 +85,13 @@ func (u URLModule) handleToken(origin *url.URL, token string) (Result, error) {
 	}
 	defer res.Body.Close()
 
+	ct := res.Header.Get("Content-Type")
+
 	return URLResult{
-		foundIn:    origin,
-		URL:        targetUrl,
-		StatusCode: res.StatusCode,
+		foundIn:        origin,
+		URL:            targetUrl,
+		StatusCode:     res.StatusCode,
+		ContentType:    requests.ParseContentType(ct),
+		RawContentType: ct,
 	}, nil
 }
