@@ -8,7 +8,6 @@ import (
 
 type Pool interface {
 	Do(req *http.Request) (*http.Response, error)
-	GetPoolSize() int
 }
 
 type pool struct {
@@ -23,10 +22,6 @@ func NewPool(concurrentRequests int) Pool {
 		client:    http.Client{Timeout: 5 * time.Second},
 		poolSize:  concurrentRequests,
 	}
-}
-
-func (p *pool) GetPoolSize() int {
-	return p.poolSize
 }
 
 func (p *pool) Do(req *http.Request) (*http.Response, error) {
@@ -45,7 +40,9 @@ func (p *pool) Do(req *http.Request) (*http.Response, error) {
 	// released.
 	response.Body = &onCloseReader{
 		ReadCloser: response.Body,
-		onClose:    func() { <-p.semaphore },
+		onClose: func() {
+			<-p.semaphore
+		},
 	}
 
 	return response, nil

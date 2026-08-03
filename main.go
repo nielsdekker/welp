@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nielsdekker/welp/internal/module"
-	"github.com/nielsdekker/welp/internal/output"
-	"github.com/nielsdekker/welp/internal/requests"
-	"github.com/nielsdekker/welp/internal/welp"
+	"github.com/nielsdekker/welp/src/output"
+	"github.com/nielsdekker/welp/src/post_process"
+	"github.com/nielsdekker/welp/src/requests"
+	"github.com/nielsdekker/welp/src/welp"
 )
 
 func main() {
@@ -27,14 +27,12 @@ func main() {
 
 	requestPool := requests.NewPool(opt.ConcurrentRequests)
 	w := welp.New(
-		opt.Target,
 		requestPool,
-		[]module.Module{
-			module.NewToken(),
-			module.NewURL(requestPool),
-		},
+		opt,
 	)
 
-	w.Crawl(ctx)
-	output.WriteTTY(w, opt)
+	w.StartCrawl(ctx)
+	output.WriteTTY(w, []postprocess.PostProcessor{
+		// postprocess.NewAllText(),
+	}, opt)
 }
