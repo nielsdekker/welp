@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nielsdekker/welp/internal/requests"
+	"github.com/nielsdekker/welp/src/requests"
 )
 
 type Options struct {
@@ -16,11 +16,13 @@ type Options struct {
 	FilterCodes        []int
 	FilterContentType  []requests.ContentType
 	ShowHelp           bool
+	MinTextLength      int
 }
 
 func ParseOptions() (Options, error) {
 	opt := Options{
 		ConcurrentRequests: 10,
+		MinTextLength:      4,
 		ShowHelp:           false,
 	}
 
@@ -35,22 +37,38 @@ func ParseOptions() (Options, error) {
 			targetUrl, _ := url.Parse(os.Args[i+1])
 			opt.Target = targetUrl
 			i++
+
+		// Number of threads
 		case "-t":
 			fallthrough
 		case "--threads":
 			c, _ := strconv.ParseInt(os.Args[i+1], 10, 32)
 			opt.ConcurrentRequests = int(c)
 			i++
+
+		// Minimum length of text to consider
+		case "-n":
+			fallthrough
+		case "--min-length":
+			c, _ := strconv.ParseInt(os.Args[i+1], 10, 32)
+			opt.MinTextLength = int(c)
+			i++
+
+		// Help
 		case "-h":
 			fallthrough
 		case "--help":
 			opt.ShowHelp = true
+
+		// Filter option statuscode
 		case "-fc":
 			fallthrough
 		case "--filter-code":
 			c, _ := strconv.ParseInt(os.Args[i+1], 10, 32)
 			opt.FilterCodes = append(opt.FilterCodes, int(c))
 			i++
+
+		// Filter option content type
 		case "-ft":
 			fallthrough
 		case "--filter-type":
