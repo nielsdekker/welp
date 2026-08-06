@@ -1,8 +1,10 @@
 package welp
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -11,6 +13,8 @@ import (
 
 	"github.com/nielsdekker/welp/src/requests"
 )
+
+const MB = 1024 * 1024
 
 // List of content types to skip parsing, mostly binary formats
 var skipContentType = []requests.ContentType{
@@ -29,14 +33,14 @@ type CrawlResult struct {
 	MD5Sum       string
 }
 
-func (w Welp) crawl(u *url.URL) (CrawlResult, error) {
+func (w Welp) crawl(ctx context.Context, u *url.URL) (CrawlResult, error) {
 	result := CrawlResult{
 		Origin:       u,
 		FoundStrings: make(map[string]struct{}),
 		StatusCode:   0,
 	}
 
-	response, err := w.requestPool.Do(&http.Request{
+	response, err := w.requestPool.Do(ctx, &http.Request{
 		Method: http.MethodGet,
 		URL:    u,
 	})
@@ -47,10 +51,15 @@ func (w Welp) crawl(u *url.URL) (CrawlResult, error) {
 
 	defer response.Body.Close()
 	md5sum := md5.New()
+
+	// Overwrite the origin, when redirects occur this contains the value of the
+	// URL that answered. Solves issues with directory listing and relative
+	// paths on these pages.
+	result.Origin = response.Request.URL
 	result.StatusCode = response.StatusCode
 	result.ContentType = requests.ParseContentType(response.Header.Get("Content-Type"))
 
-	if response.ContentLength > 1024*1024*10 {
+	if response.ContentLength > 10*MB {
 		// Skip reading, this is to large
 		return result, nil
 	}

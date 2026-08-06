@@ -1,13 +1,15 @@
 package requests
 
 import (
+	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
 )
 
 type Pool interface {
-	Do(req *http.Request) (*http.Response, error)
+	Do(ctx context.Context, req *http.Request) (*http.Response, error)
 }
 
 type pool struct {
@@ -26,10 +28,14 @@ func NewPool(concurrentRequests int) Pool {
 	}
 }
 
-func (p *pool) Do(req *http.Request) (*http.Response, error) {
+func (p *pool) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	// Will succeed when there is room in the channel. So blocking when the
 	// request pool is already saturated.
-	p.semaphore <- struct{}{}
+	select {
+	case <-ctx.Done():
+		return nil, fmt.Errorf("Context closed")
+	case p.semaphore <- struct{}{}:
+	}
 
 	if req.Header == nil {
 		req.Header = http.Header{}
