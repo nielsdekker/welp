@@ -1,18 +1,29 @@
 package welp
 
 // List of hardcoded values to always ignore. Contain standard texts that are
-// present on a lot of pages
+// present on a lot of pages. All values are lowercase.
 var ignoreList = map[string]struct{}{
-	// HTML
+	// products
+	"android":   struct{}{},
+	"chrome":    struct{}{},
+	"chromium":  struct{}{},
+	"edge":      struct{}{},
+	"firefox":   struct{}{},
+	"google":    struct{}{},
+	"ios":       struct{}{},
+	"ipad":      struct{}{},
+	"ipod":      struct{}{},
+	"linux":     struct{}{},
+	"macintosh": struct{}{},
+	"macos":     struct{}{},
+	"opera":     struct{}{},
+	"safari":    struct{}{},
+	"webkit":    struct{}{},
+	"windows":   struct{}{},
+
+	// html
 	"-1":                              struct{}{},
 	"0":                               struct{}{},
-	"DELETE":                          struct{}{},
-	"GET":                             struct{}{},
-	"ISO-8859-1":                      struct{}{},
-	"PATCH":                           struct{}{},
-	"POST":                            struct{}{},
-	"PUT":                             struct{}{},
-	"UTF-8":                           struct{}{},
 	"_blank":                          struct{}{},
 	"_parent":                         struct{}{},
 	"_self":                           struct{}{},
@@ -25,14 +36,18 @@ var ignoreList = map[string]struct{}{
 	"auto":                            struct{}{},
 	"button":                          struct{}{},
 	"canonical":                       struct{}{},
+	"content-type":                    struct{}{},
 	"current-password":                struct{}{},
+	"delete":                          struct{}{},
 	"dialog":                          struct{}{},
 	"eager":                           struct{}{},
 	"email":                           struct{}{},
 	"false":                           struct{}{},
+	"get":                             struct{}{},
 	"high":                            struct{}{},
 	"icon":                            struct{}{},
 	"img":                             struct{}{},
+	"iso-8859-1":                      struct{}{},
 	"lazy":                            struct{}{},
 	"link":                            struct{}{},
 	"low":                             struct{}{},
@@ -49,17 +64,23 @@ var ignoreList = map[string]struct{}{
 	"noreferrer":                      struct{}{},
 	"off":                             struct{}{},
 	"on":                              struct{}{},
+	"patch":                           struct{}{},
+	"post":                            struct{}{},
 	"preload":                         struct{}{},
+	"put":                             struct{}{},
 	"rtl":                             struct{}{},
 	"same-origin":                     struct{}{},
 	"strict-origin-when-cross-origin": struct{}{},
 	"stylesheet":                      struct{}{},
 	"sync":                            struct{}{},
+	"text/html; charset=utf-8":        struct{}{},
+	"text/html;charset=utf-8":         struct{}{},
 	"true":                            struct{}{},
 	"use-credentials":                 struct{}{},
 	"username":                        struct{}{},
+	"utf-8":                           struct{}{},
 
-	// CSS
+	// css
 	"absolute":       struct{}{},
 	"baseline":       struct{}{},
 	"blink":          struct{}{},
@@ -137,7 +158,7 @@ var ignoreList = map[string]struct{}{
 	"wrap":           struct{}{},
 	"wrap-reverse":   struct{}{},
 
-	// Mime types
+	// mime types
 	"application/javascript":            struct{}{},
 	"application/json":                  struct{}{},
 	"application/octet-stream":          struct{}{},
@@ -171,15 +192,15 @@ var ignoreList = map[string]struct{}{
 	"video/ogg":                         struct{}{},
 	"video/webm":                        struct{}{},
 
-	// Javascript
+	// javascript
 	"200":              struct{}{},
 	"301":              struct{}{},
 	"302":              struct{}{},
 	"404":              struct{}{},
 	"500":              struct{}{},
-	"DOMContentLoaded": struct{}{},
-	"HEAD":             struct{}{},
-	"OPTIONS":          struct{}{},
+	"domcontentloaded": struct{}{},
+	"head":             struct{}{},
+	"options":          struct{}{},
 	"active":           struct{}{},
 	"aria-expanded":    struct{}{},
 	"aria-hidden":      struct{}{},
@@ -188,7 +209,7 @@ var ignoreList = map[string]struct{}{
 	"aria-selected":    struct{}{},
 	"click":            struct{}{},
 	"cors":             struct{}{},
-	"darkMode":         struct{}{},
+	"darkmode":         struct{}{},
 	"data":             struct{}{},
 	"data-id":          struct{}{},
 	"data-name":        struct{}{},
@@ -219,8 +240,19 @@ var ignoreList = map[string]struct{}{
 	"token":            struct{}{},
 	"user":             struct{}{},
 	"value":            struct{}{},
+	"function":         struct{}{},
+	"symbol":           struct{}{},
+	"null":             struct{}{},
+	"enum":             struct{}{},
+	"class":            struct{}{},
+	"object.entries":   struct{}{},
+	"array":            struct{}{},
+	"customerror":      struct{}{},
+	"undefined":        struct{}{},
+	"bigint":           struct{}{},
+	"weakmap":          struct{}{},
 
-	// ATTR
+	// attr
 	"checkbox":       struct{}{},
 	"color":          struct{}{},
 	"date":           struct{}{},

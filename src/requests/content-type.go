@@ -49,7 +49,8 @@ func ParseContentType(headerValue string) ContentType {
 	return ContentTypeUnknown
 }
 
-func MatchContentType(value string) ContentType {
+func MatchContentType(value string) []ContentType {
+	matches := []ContentType{}
 	for _, ct := range []ContentType{
 		ContentTypeCSS,
 		ContentTypeHTML,
@@ -67,9 +68,9 @@ func MatchContentType(value string) ContentType {
 		ContentTypeVideo,
 	} {
 		if strings.Contains(string(ct), value) {
-			return ct
+			matches = append(matches, ct)
 		}
 	}
 
-	return ContentTypeUnknown
+	return matches
 }

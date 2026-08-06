@@ -5,6 +5,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/nielsdekker/welp/src/modules"
 	"github.com/nielsdekker/welp/src/welp"
 )
 
@@ -16,9 +17,17 @@ func eq[K comparable](t *testing.T, expected K, actual K) {
 
 func hasPath(t *testing.T, results []welp.CrawlResult, p string) {
 	if !slices.ContainsFunc(results, func(res welp.CrawlResult) bool {
-		return res.Origin.Path == p
+		return res.Origin.Path == p || res.Origin.Path+"/" == p
 	}) {
 		t.Errorf("Expected \"%s\" to be in the crawl results", p)
+	}
+}
+
+func hasModuleResult(t *testing.T, results []modules.ModuleResult, p string) {
+	if !slices.ContainsFunc(results, func(res modules.ModuleResult) bool {
+		return res.FoundValue == p
+	}) {
+		t.Errorf("Expected \"%s\" to be in the module results", p)
 	}
 }
 
