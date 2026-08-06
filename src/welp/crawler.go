@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"strings"
 
 	"github.com/nielsdekker/welp/src/requests"
 )
@@ -32,6 +33,7 @@ func (w Welp) crawl(u *url.URL) (CrawlResult, error) {
 	result := CrawlResult{
 		Origin:       u,
 		FoundStrings: make(map[string]struct{}),
+		StatusCode:   0,
 	}
 
 	response, err := w.requestPool.Do(&http.Request{
@@ -87,7 +89,7 @@ func (w Welp) crawl(u *url.URL) (CrawlResult, error) {
 				if i >= 0 {
 					bytes := allBodyBytes[i+1 : parsedTill]
 					if w.isAscii(bytes) {
-						result.FoundStrings[string(bytes)] = struct{}{}
+						result.FoundStrings[strings.TrimSpace(string(bytes))] = struct{}{}
 					}
 					quoteIndices[b] = -1
 				} else {
@@ -112,7 +114,7 @@ func (w Welp) crawl(u *url.URL) (CrawlResult, error) {
 }
 
 func (w Welp) isAscii(data []byte) bool {
-	if len(data) < w.options.MinTextLength {
+	if len(data) < w.options.MinTextLength || len(data) > w.options.MaxTextLength {
 		return false
 	}
 

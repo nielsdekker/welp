@@ -19,8 +19,10 @@ type pool struct {
 func NewPool(concurrentRequests int) Pool {
 	return &pool{
 		semaphore: make(chan struct{}, concurrentRequests),
-		client:    http.Client{Timeout: 5 * time.Second},
-		poolSize:  concurrentRequests,
+		client: http.Client{
+			Timeout: 5 * time.Second,
+		},
+		poolSize: concurrentRequests,
 	}
 }
 
@@ -29,6 +31,10 @@ func (p *pool) Do(req *http.Request) (*http.Response, error) {
 	// request pool is already saturated.
 	p.semaphore <- struct{}{}
 
+	if req.Header == nil {
+		req.Header = http.Header{}
+	}
+	req.Header.Add("User-Agent", "welp/v1")
 	response, err := p.client.Do(req)
 
 	if err != nil {

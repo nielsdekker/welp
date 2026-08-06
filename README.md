@@ -1,53 +1,78 @@
 # Welp
 
-The goal of `welp` is to find URL's and other string-like content on webpages.
-For example a _Single Page Application_ could have a goldmine of API URL's
-somewhere in the javascript, `welp` will try to find these. Another possibility
-is tokens or other secrets that were accidentally exposed in the frontend code.
+`Welp` is a crawler that enumerates string-like values on webpages. With
+frontend frameworks a lot of API data or tokens could be hidden somewhere in the
+JavaScript bundle and `welp` will attempt to find these.
+
+> NOTE: Welp results in a lot of requests to the given target. Use only when you
+> have permission
 
 # How to use
+
+The simplest call is as follows:
 
 ```bash
 welp -u http://target.test
 ```
 
-# Technical
+A JSON representation of the output can also be written to a file:
 
-What `welp` does is find content within `"`, `'`, or `\``. Then makes a request
-for all the values that match and repeats the same process. For example:
-
-```html
-<html>
-    <head>
-        <script type="javascript" src="/script.js"></script>
-    <head>
-    <body>
-        <span>My awesome webpage</span>
-    </body>
-</html>
+```bash
+welp -u http://target.test --output out.json
 ```
 
-> Note, the text "My awesome webpage" is not in quotes and therefore this is
-> skipped.
+## Adding prefixes
 
-`welp` Will find the following:
+It's possible the JavaScript code contains a snippet as follows:
 
-- `javascript`, which results in the call `GET /javascript`
-- `/script.js`, which triggers a call to `GET /script.js`
+```js
+const apiVersion = "/rest/v2/"
+fetch(apiVersion + "users")
+```
 
-On those pages the same logic is repeated.
+`Welp` will see two strings values and checks the `"/rest/v2/"` and `"/users"`
+endpoints instead of `"/rest/v2/users"`. For these situations a `--prefix` flag
+can be passed 
 
-## Safeguards
+```bash
+welp -u http://target.test --prefix /rest/v2/ --prefix /rest/v3/
+```
 
-There are some safeguards in place to prevent endless loops.
+This will result in each found value to also be tested with the given prefixes.
+In short the above example will make calls to:
 
-- `40x` and `50x` Responses will be reported as a result but content on these
-  do not trigger another crawl
-- A md5 sum is calculated, when a page matches another page the result is
-  reported but no additional requests will be made
-    - Reasoning is _single page applications_ could return the exact same
-      `index.html` for each non-api endpoint. The routing is determined in
-      the JavaScript itself.
-- If the `path` gets too long, this is mostly to filter out large `eval("...")`
-  blocks that could be present in the JavaScript
-- When the new URL targets another domain it will not be crawled
+- `/rest/v2/`
+- `/rest/v2/rest/v2/`
+- `/rest/v3/rest/v2/`
+- `/users`
+- `/rest/v2/users`
+- `/rest/v3/users`
+
+## Using modules
+
+Some modules are included to parse the output. These are:
+
+- `text`, Will also print all the found text values
+- `token`, Matches certain token types
+- `entropy`, Checks the text has a certain entropy level. In case `tokens`
+  doesn't find it
+
+Modules can be used as follows:
+
+```bash
+welp -u http://target.test --module text -m token
+```
+
+## Filtering the output
+
+By default 404 pages are filtered in the output but additional filter options
+can be given.
+
+```bash
+# Removes all responses with a 404 or 500 status code from the output
+welp -u http://target.test -fc 404 --filter-code 500
+
+# Removes all responses with a content type that matches # `-ft text` matches
+# `text/html`, `test/css`, etc.
+welp -u http://target.test -ft text -ft image
+```
