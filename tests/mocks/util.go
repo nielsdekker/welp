@@ -7,6 +7,7 @@ import (
 )
 
 func createResponse(
+	request *http.Request,
 	statuscode int,
 	body string,
 	contentType string,
@@ -17,5 +18,6 @@ func createResponse(
 		Header: http.Header{
 			"Content-Type": []string{contentType},
 		},
+		Request: request,
 	}
 }

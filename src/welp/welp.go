@@ -37,9 +37,10 @@ func New(
 
 func (w Welp) StartCrawl(ctx context.Context, outputChannel chan CrawlResult) {
 	resultChannel := make(chan resultWithDepth)
+	defer close(resultChannel)
 
 	crawl := func(newURL *url.URL, currentDepth int) {
-		res, err := w.crawl(newURL)
+		res, err := w.crawl(ctx, newURL)
 		if err != nil {
 			fmt.Printf("err: %v\n", err)
 		}
@@ -52,37 +53,36 @@ func (w Welp) StartCrawl(ctx context.Context, outputChannel chan CrawlResult) {
 	go crawl(w.options.Target, 0)
 
 	counter := 1
-	numErrors := 0
-	for r := range resultChannel {
-		counter--
-		_, md5match := w.md5Cache[r.MD5Sum]
-		isErrorResponse := r.StatusCode <= 0 || r.StatusCode >= 400
+	for {
+		select {
+		case <-ctx.Done():
+			break
+		case r := <-resultChannel:
+			counter--
+			_, md5match := w.md5Cache[r.MD5Sum]
+			isErrorResponse := r.StatusCode <= 0 || r.StatusCode >= 400
 
-		if !md5match {
-			// New result so store it
-			w.crawledUrls[r.Origin.String()] = struct{}{}
-			w.md5Cache[r.MD5Sum] = struct{}{}
+			if !md5match {
+				// New result so store it
+				w.crawledUrls[r.Origin.String()] = struct{}{}
+				w.md5Cache[r.MD5Sum] = struct{}{}
 
-			// And send it on the output channel
-			outputChannel <- r.CrawlResult
-		}
+				// And send it on the output channel
+				outputChannel <- r.CrawlResult
+			}
 
-		// This means the request failed completely
-		if r.StatusCode <= 0 {
-			numErrors++
-		}
-
-		if !md5match && !isErrorResponse {
-			for _, newURL := range w.determineUrls(r) {
-				if _, ok := w.crawledUrls[newURL.String()]; !ok {
-					counter++
-					go crawl(newURL, r.depth)
+			if !md5match && !isErrorResponse {
+				for _, newURL := range w.determineUrls(r) {
+					if _, ok := w.crawledUrls[newURL.String()]; !ok {
+						counter++
+						go crawl(newURL, r.depth)
+					}
 				}
 			}
-		}
 
-		if counter <= 0 {
-			close(resultChannel)
+			if counter <= 0 {
+				return
+			}
 		}
 	}
 }

@@ -2,18 +2,18 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/nielsdekker/welp/src/modules"
 	"github.com/nielsdekker/welp/src/welp"
 )
 
-func WriteJSON(outChannel chan welp.CrawlResult, allModules []modules.Module, opt welp.Options) {
+func WriteJSON(outChannel chan welp.CrawlResult, allModules []modules.Module, opt welp.Options) error {
 	f, err := os.Create(opt.OutputFile)
 
 	if err != nil {
-		// TODO, maak dit beter
-		panic(err)
+		return fmt.Errorf("Unable to write outputfile %w", err)
 	}
 
 	defer f.Close()
@@ -54,4 +54,5 @@ func WriteJSON(outChannel chan welp.CrawlResult, allModules []modules.Module, op
 	}
 
 	f.Write([]byte("\n]"))
+	return nil
 }

@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/nielsdekker/welp/src/requests"
@@ -12,7 +13,7 @@ func NewTokenInJSMock() requests.Pool {
 	return tokenInJsMock{}
 }
 
-func (t tokenInJsMock) Do(req *http.Request) (*http.Response, error) {
+func (t tokenInJsMock) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	index := `
 		<html>
 			<head></head>
@@ -37,14 +38,14 @@ func (t tokenInJsMock) Do(req *http.Request) (*http.Response, error) {
 
 	switch req.URL.Path {
 	case "/scripts/main.js":
-		return createResponse(200, jsMain, "application/javascript"), nil
+		return createResponse(req, 200, jsMain, "application/javascript"), nil
 	case "/scripts/tokens.js":
-		return createResponse(200, jsToken, "application/javascript"), nil
+		return createResponse(req, 200, jsToken, "application/javascript"), nil
 	case "":
 		fallthrough
 	case "/":
-		return createResponse(200, index, "text/html"), nil
+		return createResponse(req, 200, index, "text/html"), nil
 	default:
-		return createResponse(404, "Not found", "text/plain"), nil
+		return createResponse(req, 404, "Not found", "text/plain"), nil
 	}
 }

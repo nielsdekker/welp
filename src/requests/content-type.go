@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"mime"
 	"strings"
 )
 
@@ -25,6 +26,12 @@ const (
 )
 
 func ParseContentType(headerValue string) ContentType {
+	mediatype, _, err := mime.ParseMediaType(headerValue)
+
+	if err != nil {
+		return ContentTypeUnknown
+	}
+
 	for _, ct := range []ContentType{
 		ContentTypeCSS,
 		ContentTypeHTML,
@@ -41,7 +48,7 @@ func ParseContentType(headerValue string) ContentType {
 		ContentTypeIMG,
 		ContentTypeVideo,
 	} {
-		if strings.HasPrefix(headerValue, string(ct)) {
+		if strings.HasPrefix(mediatype, string(ct)) {
 			return ct
 		}
 	}

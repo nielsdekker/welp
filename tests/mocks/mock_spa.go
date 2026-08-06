@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/nielsdekker/welp/src/requests"
@@ -14,7 +15,7 @@ func NewSpaMock() requests.Pool {
 	return spaMock{}
 }
 
-func (s spaMock) Do(req *http.Request) (*http.Response, error) {
+func (s spaMock) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
 	spaIndex := `
 		<html>
 			<head>
@@ -39,8 +40,8 @@ func (s spaMock) Do(req *http.Request) (*http.Response, error) {
 
 	switch req.URL.Path {
 	case "/style/default.css":
-		return createResponse(200, spaCss, "text/html"), nil
+		return createResponse(req, 200, spaCss, "text/css"), nil
 	default:
-		return createResponse(200, spaIndex, "text/html"), nil
+		return createResponse(req, 200, spaIndex, "text/html"), nil
 	}
 }

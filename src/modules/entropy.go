@@ -7,12 +7,16 @@ import (
 	"github.com/nielsdekker/welp/src/welp"
 )
 
-type entropyModule struct{}
+type entropyModule struct {
+	MinEntropy float64
+}
 
 var _ Module = entropyModule{}
 
 func NewEntropy() entropyModule {
-	return entropyModule{}
+	return entropyModule{
+		MinEntropy: 4.5,
+	}
 }
 
 func (e entropyModule) GetName() string { return "Entropy" }
@@ -22,7 +26,7 @@ func (e entropyModule) Handle(crawlResult welp.CrawlResult) []ModuleResult {
 
 	for k := range crawlResult.FoundStrings {
 		// No matches so do an entropy check
-		if entropy(k) > 4.5 {
+		if entropy(k) > e.MinEntropy {
 			results = append(results, ModuleResult{
 				Name:       e.GetName(),
 				FoundValue: k,
@@ -37,7 +41,7 @@ func (e entropyModule) Handle(crawlResult welp.CrawlResult) []ModuleResult {
 }
 
 func entropy(data string) float64 {
-	counts := make([]int8, 256)
+	counts := make([]int, 256)
 	lenData := float64(len(data))
 	for _, r := range data {
 		counts[r]++

@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	opt, err := welp.ParseOptions()
 
 	if opt.ShowHelp {
@@ -54,7 +54,9 @@ func main() {
 	}()
 
 	if opt.OutputFile != "" {
-		output.WriteJSON(out, allModules, opt)
+		if err := output.WriteJSON(out, allModules, opt); err != nil {
+			cancel()
+		}
 	} else {
 		output.WriteTTY(out, allModules, opt)
 	}
