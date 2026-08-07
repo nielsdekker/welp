@@ -15,7 +15,6 @@ func (t textModule) GetName() string {
 }
 
 func (t textModule) Handle(crawlResult welp.CrawlResult) []ModuleResult {
-	// TODO, check if valid ascii or utf8
 	allText := []ModuleResult{}
 	for k := range crawlResult.FoundStrings {
 		allText = append(allText, ModuleResult{

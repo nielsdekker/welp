@@ -48,6 +48,11 @@ var _opt = []struct {
 		opt.OutputFile = nextArg
 		return true
 	}},
+	{"-t", "--threads", "Number of concurrent requests", func(opt *Options, nextArg string) bool {
+		c, _ := strconv.ParseInt(nextArg, 10, 32)
+		opt.ConcurrentRequests = int(c)
+		return true
+	}},
 	{"-fc", "--filter-code", "Filters out URL results with the given status code, multiple arguments can be passed", func(opt *Options, nextArg string) bool {
 		c, _ := strconv.ParseInt(nextArg, 10, 32)
 		opt.FilterCodes = append(opt.FilterCodes, int(c))
@@ -55,11 +60,6 @@ var _opt = []struct {
 	}},
 	{"-ft", "--filter-type", "Filters out URL results for the given content type, multiple arguments can be passed", func(opt *Options, nextArg string) bool {
 		opt.FilterContentType = append(opt.FilterContentType, requests.MatchContentType(nextArg)...)
-		return true
-	}},
-	{"-ct", "--config-threads", "Number of concurrent requests", func(opt *Options, nextArg string) bool {
-		c, _ := strconv.ParseInt(nextArg, 10, 32)
-		opt.ConcurrentRequests = int(c)
 		return true
 	}},
 	{"-cmin", "--config-min-length", "The min length of a string to consider it a result, defaults to 4", func(opt *Options, nextArg string) bool {
@@ -87,7 +87,7 @@ func ParseOptions() (Options, error) {
 		MaxSearchDepth:     5,
 		ShowHelp:           false,
 		Modules:            map[string]struct{}{},
-		Prefixes:           map[string]struct{}{"": struct{}{}},
+		Prefixes:           map[string]struct{}{},
 	}
 
 	for i := 1; i < len(os.Args); i++ {

@@ -3,7 +3,6 @@ package welp
 import (
 	"context"
 	"fmt"
-	"net/url"
 
 	"github.com/nielsdekker/welp/src/requests"
 )
@@ -11,15 +10,6 @@ import (
 type Welp struct {
 	options     Options
 	requestPool requests.Pool
-
-	// Set containing all the URLS already crawled
-	crawledUrls map[string]struct{}
-	md5Cache    map[string]struct{}
-}
-
-type resultWithDepth struct {
-	CrawlResult
-	depth int
 }
 
 func New(
@@ -27,55 +17,50 @@ func New(
 	opt Options,
 ) Welp {
 	return Welp{
-		options: opt,
-
+		options:     opt,
 		requestPool: requestPool,
-		crawledUrls: map[string]struct{}{},
-		md5Cache:    map[string]struct{}{},
 	}
 }
 
 func (w Welp) StartCrawl(ctx context.Context, outputChannel chan CrawlResult) {
-	resultChannel := make(chan resultWithDepth)
+	resultChannel := make(chan CrawlResult)
 	defer close(resultChannel)
 
-	crawl := func(newURL *url.URL, currentDepth int) {
-		res, err := w.crawl(ctx, newURL)
-		if err != nil {
-			fmt.Printf("err: %v\n", err)
-		}
-		resultChannel <- resultWithDepth{
-			depth:       currentDepth + 1,
-			CrawlResult: res,
-		}
-
-	}
-	go crawl(w.options.Target, 0)
+	go w.crawlWrapper(ctx, w.options.Target.String(), 0, resultChannel)
 
 	counter := 1
+	crawledUrls := make(map[string]struct{})
+	md5Cache := make(map[string]struct{})
+
 	for {
 		select {
 		case <-ctx.Done():
 			break
 		case r := <-resultChannel:
 			counter--
-			_, md5match := w.md5Cache[r.MD5Sum]
+			_, md5match := md5Cache[r.MD5Sum]
 			isErrorResponse := r.StatusCode <= 0 || r.StatusCode >= 400
+			reachedMaxDepth := r.depth > w.options.MaxSearchDepth
 
 			if !md5match {
 				// New result so store it
-				w.crawledUrls[r.Origin.String()] = struct{}{}
-				w.md5Cache[r.MD5Sum] = struct{}{}
+				crawledUrls[r.Origin] = struct{}{}
+				md5Cache[r.MD5Sum] = struct{}{}
 
 				// And send it on the output channel
-				outputChannel <- r.CrawlResult
+				outputChannel <- r
 			}
 
-			if !md5match && !isErrorResponse {
-				for _, newURL := range w.determineUrls(r) {
-					if _, ok := w.crawledUrls[newURL.String()]; !ok {
+			if !md5match && !isErrorResponse && !reachedMaxDepth {
+				for _, newURL := range determineUrls(r, w.options.Prefixes) {
+					if newURL.Host != w.options.Target.Host {
+						// Skip going outside the target domain
+						continue
+					}
+
+					if _, ok := crawledUrls[newURL.String()]; !ok {
 						counter++
-						go crawl(newURL, r.depth)
+						go w.crawlWrapper(ctx, newURL.String(), r.depth, resultChannel)
 					}
 				}
 			}
@@ -85,4 +70,13 @@ func (w Welp) StartCrawl(ctx context.Context, outputChannel chan CrawlResult) {
 			}
 		}
 	}
+}
+
+func (w Welp) crawlWrapper(ctx context.Context, target string, currentDepth int, resultChannel chan CrawlResult) {
+	res, err := crawl(ctx, target, w.requestPool, w.options.MinTextLength, w.options.MaxTextLength)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+	}
+	res.depth = currentDepth + 1
+	resultChannel <- res
 }

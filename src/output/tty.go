@@ -28,7 +28,7 @@ func WriteTTY(outChannel chan welp.CrawlResult, allModules []modules.Module, opt
 			fmt.Printf("[%s%3d%s]", ESCAPE_RED, r.StatusCode, ESCAPE_RESET)
 		}
 
-		fmt.Printf(" %s - %s\n", r.Origin.Path, r.ContentType)
+		fmt.Printf(" %s - %s\n", r.Origin, r.ContentType)
 
 		for k, v := range moduleResults {
 			for _, r := range v {

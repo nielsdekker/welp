@@ -2,6 +2,7 @@ package welp_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/nielsdekker/welp/src/modules"
@@ -14,8 +15,9 @@ func TestSpa(t *testing.T) {
 	results := newWelp(mocks.NewSpaMock())
 
 	eq(t, len(results), 2)
-	hasPath(t, results, "/")
-	hasPath(t, results, "/style/default.css")
+	fmt.Printf("%v\n", results)
+	hasUrl(t, results, "http://localhost")
+	hasUrl(t, results, "http://localhost/style/default.css")
 }
 
 func TestToken(t *testing.T) {

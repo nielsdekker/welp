@@ -35,13 +35,15 @@ func WriteJSON(outChannel chan welp.CrawlResult, allModules []modules.Module, op
 		}
 
 		asJson, err := json.Marshal(jsonResult{
-			Origin:      r.Origin.String(),
+			Origin:      r.Origin,
 			StatusCode:  r.StatusCode,
 			ContentType: string(r.ContentType),
 			MD5Sum:      r.MD5Sum,
 			Modules:     applyModules(r, allModules),
 		})
 		if err != nil {
+			fmt.Printf("Unable to write record to file %v\n", err)
+			fmt.Printf("Record value: %v\n", r)
 			continue
 		}
 
