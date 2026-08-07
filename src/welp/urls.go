@@ -1,9 +1,7 @@
 package welp
 
 import (
-	"fmt"
 	"net/url"
-	"path"
 	"regexp"
 	"strings"
 )
@@ -13,14 +11,10 @@ import (
 var validURLRegex = regexp.MustCompile(`^[\w\/\.]\S+$`)
 
 // Determines follow urls based on the result
-func (w Welp) determineUrls(result resultWithDepth) []*url.URL {
-	// Certain content types have patterns for certain urls. For example
-	// `/scripts/main.js` could contain `import bla from "./other.js". In this
-	// scenario a result would
-	if result.depth > w.options.MaxSearchDepth {
-		return []*url.URL{}
-	}
-
+func determineUrls(
+	result CrawlResult,
+	prefixes map[string]struct{},
+) []*url.URL {
 	urls := []*url.URL{}
 	for s := range result.FoundStrings {
 		if _, ok := ignoreList[strings.ToLower(s)]; ok {
@@ -31,58 +25,50 @@ func (w Welp) determineUrls(result resultWithDepth) []*url.URL {
 			continue
 		}
 
-		for prefix := range w.options.Prefixes {
-			if strings.HasPrefix(s, "http") && len(prefix) > 0 {
+		if u, err := addStringToUrl(result.Origin, s); err == nil {
+			urls = append(urls, u)
+		}
+
+		// And add any prefixes
+		for prefix := range prefixes {
+			if strings.HasPrefix(s, "http") {
 				continue
 			}
 
-			newURL, err := w.stringToUrl(prefix+s, result.Origin)
-			if err != nil {
-				continue
+			if u, err := addStringToUrl(result.Origin, prefix+s); err == nil {
+				urls = append(urls, u)
 			}
-
-			urls = append(urls, newURL)
 		}
 	}
 
 	return urls
 }
 
-func (w Welp) stringToUrl(s string, origin *url.URL) (*url.URL, error) {
-	target := ""
-
-	if strings.HasPrefix(s, "/") {
-		// Absolute URL
-		target = fmt.Sprintf("%s://%s", w.options.Target.Scheme, path.Join(w.options.Target.Host, s))
-	} else if strings.HasPrefix(s, "https://") || strings.HasPrefix(s, "http://") {
-		// Fully qualified url, so use as is
-		target = s
-	} else {
-		// Either a relative url or nothing
-		target = fmt.Sprintf(
-			"%s://%s",
-			origin.Scheme,
-			path.Join(
-				origin.Host,
-				path.Dir(origin.Path),
-				s,
-			),
-		)
+func addStringToUrl(
+	origin string,
+	toAdd string,
+) (*url.URL, error) {
+	// Complete url, use as-is
+	if strings.HasPrefix(toAdd, "https://") || strings.HasPrefix(toAdd, "http://") {
+		u, err := url.Parse(toAdd)
+		if err != nil {
+			return nil, err
+		}
+		return u, nil
 	}
 
-	targetUrl, err := url.Parse(target)
-
+	asUrl, err := url.Parse(origin)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(targetUrl.String()) > 1024 {
-		return nil, fmt.Errorf("%s is longer then max length of %d", targetUrl.String(), 1024)
+	if strings.HasPrefix(toAdd, "/") {
+		asUrl.Path = toAdd
+	} else if strings.HasSuffix(asUrl.Path, "/") {
+		asUrl = asUrl.JoinPath(toAdd)
+	} else {
+		asUrl = asUrl.JoinPath("../", "/", toAdd)
 	}
 
-	if targetUrl.Host != w.options.Target.Host {
-		return nil, fmt.Errorf("%s is a different host then %s", targetUrl.Host, origin.Host)
-	}
-
-	return targetUrl, nil
+	return asUrl, nil
 }

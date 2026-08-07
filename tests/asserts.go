@@ -15,9 +15,9 @@ func eq[K comparable](t *testing.T, expected K, actual K) {
 	}
 }
 
-func hasPath(t *testing.T, results []welp.CrawlResult, p string) {
+func hasUrl(t *testing.T, results []welp.CrawlResult, p string) {
 	if !slices.ContainsFunc(results, func(res welp.CrawlResult) bool {
-		return res.Origin.Path == p || res.Origin.Path+"/" == p
+		return res.Origin == p || res.Origin+"/" == p
 	}) {
 		t.Errorf("Expected \"%s\" to be in the crawl results", p)
 	}

@@ -4,12 +4,11 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"slices"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/nielsdekker/welp/src/requests"
 )
@@ -26,24 +25,29 @@ var skipContentType = []requests.ContentType{
 }
 
 type CrawlResult struct {
-	Origin       *url.URL
+	Origin       string
 	StatusCode   int
 	ContentType  requests.ContentType
 	FoundStrings map[string]struct{}
 	MD5Sum       string
+	depth        int
 }
 
-func (w Welp) crawl(ctx context.Context, u *url.URL) (CrawlResult, error) {
+func crawl(
+	ctx context.Context,
+	target string,
+	pool requests.Pool,
+	minLength int,
+	maxLength int,
+) (CrawlResult, error) {
 	result := CrawlResult{
-		Origin:       u,
+		Origin:       target,
 		FoundStrings: make(map[string]struct{}),
 		StatusCode:   0,
 	}
 
-	response, err := w.requestPool.Do(ctx, &http.Request{
-		Method: http.MethodGet,
-		URL:    u,
-	})
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
+	response, err := pool.Do(ctx, req)
 
 	if err != nil {
 		return result, err
@@ -55,7 +59,7 @@ func (w Welp) crawl(ctx context.Context, u *url.URL) (CrawlResult, error) {
 	// Overwrite the origin, when redirects occur this contains the value of the
 	// URL that answered. Solves issues with directory listing and relative
 	// paths on these pages.
-	result.Origin = response.Request.URL
+	result.Origin = response.Request.URL.String()
 	result.StatusCode = response.StatusCode
 	result.ContentType = requests.ParseContentType(response.Header.Get("Content-Type"))
 
@@ -82,8 +86,8 @@ func (w Welp) crawl(ctx context.Context, u *url.URL) (CrawlResult, error) {
 	}
 
 	for {
-		bytesRed, _ := response.Body.Read(buffer)
-		if bytesRed == 0 {
+		bytesRed, err := response.Body.Read(buffer)
+		if bytesRed == 0 && err == io.EOF {
 			break
 		}
 
@@ -93,17 +97,19 @@ func (w Welp) crawl(ctx context.Context, u *url.URL) (CrawlResult, error) {
 
 		for parsedTill < len(allBodyBytes) {
 			b := allBodyBytes[parsedTill]
+
 			if i, ok := quoteIndices[b]; ok {
 				// This is a quote/string character so parse it
 				if i >= 0 {
 					bytes := allBodyBytes[i+1 : parsedTill]
-					if w.isAscii(bytes) {
+					if utf8.Valid(bytes) && len(bytes) >= minLength && len(bytes) <= maxLength {
 						result.FoundStrings[strings.TrimSpace(string(bytes))] = struct{}{}
 					}
 					quoteIndices[b] = -1
 				} else {
 					quoteIndices[b] = parsedTill
 				}
+
 			} else {
 				switch allBodyBytes[parsedTill] {
 				case '\n':
@@ -120,26 +126,4 @@ func (w Welp) crawl(ctx context.Context, u *url.URL) (CrawlResult, error) {
 
 	result.MD5Sum = hex.EncodeToString(md5sum.Sum(nil))
 	return result, nil
-}
-
-func (w Welp) isAscii(data []byte) bool {
-	if len(data) < w.options.MinTextLength || len(data) > w.options.MaxTextLength {
-		return false
-	}
-
-	for _, b := range data {
-		// Text values in ASCII
-		if b >= 32 && b <= 126 {
-			continue
-		}
-
-		// Control values like newlines and tabs in ASCII
-		if b >= 9 && b <= 13 {
-			continue
-		}
-
-		return false
-	}
-
-	return true
 }

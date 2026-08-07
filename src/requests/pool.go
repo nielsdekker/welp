@@ -13,9 +13,10 @@ type Pool interface {
 }
 
 type pool struct {
-	semaphore chan struct{}
-	client    http.Client
-	poolSize  int
+	semaphore    chan struct{}
+	client       http.Client
+	poolSize     int
+	openRequests int
 }
 
 func NewPool(concurrentRequests int) Pool {
