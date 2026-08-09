@@ -1,10 +1,14 @@
+> [!IMPORTANT]
+> Still a work in progress, it "should" work but no guarantees.
+
 # Welp
 
-`Welp` is a crawler that enumerates string-like values on webpages. With
+`Welp` is a crawler that enumerates string-like values on web pages. With
 frontend frameworks a lot of API data or tokens could be hidden somewhere in the
 JavaScript bundle and `welp` will attempt to find these.
 
-> NOTE: Welp results in a lot of requests to the given target. Use only when you
+> [!NOTE]
+> Welp results in a lot of requests to the given target. Use only when you
 > have permission
 
 # How to use
