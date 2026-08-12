@@ -8,21 +8,22 @@ import (
 type ContentType string
 
 const (
-	ContentTypeCSS      = "text/css"
-	ContentTypeHTML     = "text/html"
-	ContentTypeMarkdown = "text/markdown"
-	ContentTypeText     = "text/plain"
-	ContentTypeBinary   = "application/octet-stream"
-	ContentTypeJSON     = "application/json"
-	ContentTypeJSONLD   = "application/ld+json"
-	ContentTypePDF      = "application/pdf"
-	ContentTypeXML      = "application/xml"
-	ContentTypeZip      = "application/zip"
-	ContentTypeAudio    = "audio/"
-	ContentTypeFont     = "font/"
-	ContentTypeIMG      = "image/"
-	ContentTypeVideo    = "video/"
-	ContentTypeUnknown  = "unknown/"
+	ContentTypeAudio      = "audio/"
+	ContentTypeBinary     = "application/octet-stream"
+	ContentTypeCSS        = "text/css"
+	ContentTypeFont       = "font/"
+	ContentTypeHTML       = "text/html"
+	ContentTypeIMG        = "image/"
+	ContentTypeJSON       = "application/json"
+	ContentTypeJSONLD     = "application/ld+json"
+	ContentTypeJavaScript = "application/javascript"
+	ContentTypeMarkdown   = "text/markdown"
+	ContentTypePDF        = "application/pdf"
+	ContentTypeText       = "text/plain"
+	ContentTypeUnknown    = "unknown/"
+	ContentTypeVideo      = "video/"
+	ContentTypeXML        = "application/xml"
+	ContentTypeZip        = "application/zip"
 )
 
 func ParseContentType(headerValue string) ContentType {
@@ -40,6 +41,7 @@ func ParseContentType(headerValue string) ContentType {
 		ContentTypeBinary,
 		ContentTypeJSON,
 		ContentTypeJSONLD,
+		ContentTypeJavaScript,
 		ContentTypePDF,
 		ContentTypeXML,
 		ContentTypeZip,
@@ -66,6 +68,7 @@ func MatchContentType(value string) []ContentType {
 		ContentTypeBinary,
 		ContentTypeJSON,
 		ContentTypeJSONLD,
+		ContentTypeJavaScript,
 		ContentTypePDF,
 		ContentTypeXML,
 		ContentTypeZip,
