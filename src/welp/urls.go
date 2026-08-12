@@ -62,12 +62,18 @@ func addStringToUrl(
 		return nil, err
 	}
 
+	pathAndQuery := strings.Split(toAdd, "?")
+
 	if strings.HasPrefix(toAdd, "/") {
-		asUrl.Path = toAdd
+		asUrl.Path = pathAndQuery[0]
 	} else if strings.HasSuffix(asUrl.Path, "/") {
-		asUrl = asUrl.JoinPath(toAdd)
+		asUrl = asUrl.JoinPath(pathAndQuery[0])
 	} else {
-		asUrl = asUrl.JoinPath("../", "/", toAdd)
+		asUrl = asUrl.JoinPath("../", "/", pathAndQuery[0])
+	}
+
+	if len(pathAndQuery) > 1 {
+		asUrl.RawQuery = pathAndQuery[1]
 	}
 
 	return asUrl, nil
