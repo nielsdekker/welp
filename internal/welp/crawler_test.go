@@ -13,11 +13,11 @@ func Test_searchStrings(t *testing.T) {
 		MaxTextLength: 100,
 	}
 	var tests = []struct {
-		name    string
-		data    string
-		opt     Options
-		results []string
-		md5sum  string
+		name        string
+		data        string
+		opt         Options
+		expected    []string
+		expectedMd5 string
 	}{
 		{"No text", "", opt, []string{}, "d41d8cd98f00b204e9800998ecf8427e"},
 		{"Single quotes", `var api='abcdef'; const host='hostname';`, opt, []string{"abcdef", "hostname"}, "a42331bb4301d58720903948512610d3"},
@@ -33,13 +33,13 @@ func Test_searchStrings(t *testing.T) {
 			t.Parallel()
 
 			asSet := make(map[string]struct{})
-			for _, r := range tt.results {
+			for _, r := range tt.expected {
 				asSet[r] = struct{}{}
 			}
 
 			foundStrings, md5sum := searchStrings(bytes.NewReader([]byte(tt.data)), tt.opt, 1)
 			asserts.KeysEq(t, asSet, foundStrings)
-			asserts.Eq(t, md5sum, tt.md5sum)
+			asserts.Eq(t, md5sum, tt.expectedMd5)
 		})
 	}
 }
