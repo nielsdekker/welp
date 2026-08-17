@@ -119,7 +119,7 @@ func ParseOptions() (Options, error) {
 }
 
 func (o Options) PrintHelp() {
-	fmt.Println("WELP\n")
+	fmt.Println("WELP")
 	fmt.Println("Usage:")
 	for _, o := range _opt {
 		fmt.Printf("%6s, %-24s%s\n", o.shortform, o.longform, o.description)

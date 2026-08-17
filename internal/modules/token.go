@@ -3,7 +3,7 @@ package modules
 import (
 	"regexp"
 
-	"github.com/nielsdekker/welp/src/welp"
+	"github.com/nielsdekker/welp/internal/welp"
 )
 
 var regexpTokens = []struct {
@@ -13,9 +13,9 @@ var regexpTokens = []struct {
 	// Specific
 	{regexp.MustCompile(`ghp_\w+`), "github"},
 	{regexp.MustCompile(`github_pat_\w+`), "github"},
+	{regexp.MustCompile(`glpat-[\w-+\/=]+`), "gitlab"},
 	{regexp.MustCompile(`AKIA[\w]+`), "aws"},
 	{regexp.MustCompile(`FwoGZXIvYXdz[\w-+\/]+`), "aws"},
-	{regexp.MustCompile(`glpat-[\w-+\/=]+`), "gitlab"},
 	{regexp.MustCompile(`(xoxb|xoxp|xapp)-[\w-]+`), "slack"},
 	{regexp.MustCompile(`sk-ant-oat01-[\w-]+`), "claude"},
 	{regexp.MustCompile(`sk-[\w]+`), "openAI"},

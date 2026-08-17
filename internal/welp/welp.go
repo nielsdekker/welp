@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nielsdekker/welp/src/requests"
+	"github.com/nielsdekker/welp/internal/requests"
 )
 
 type Welp struct {
@@ -73,7 +73,7 @@ func (w Welp) StartCrawl(ctx context.Context, outputChannel chan CrawlResult) {
 }
 
 func (w Welp) crawlWrapper(ctx context.Context, target string, currentDepth int, resultChannel chan CrawlResult) {
-	res, err := crawl(ctx, target, w.requestPool, w.options.MinTextLength, w.options.MaxTextLength)
+	res, err := crawl(ctx, target, w.requestPool, w.options)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 	}

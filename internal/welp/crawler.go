@@ -11,7 +11,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/nielsdekker/welp/src/requests"
+	"github.com/nielsdekker/welp/internal/requests"
 )
 
 const MB = 1024 * 1024
@@ -38,8 +38,7 @@ func crawl(
 	ctx context.Context,
 	target string,
 	pool requests.Pool,
-	minLength int,
-	maxLength int,
+	opt Options,
 ) (CrawlResult, error) {
 	result := CrawlResult{
 		Origin:       target,
@@ -55,7 +54,6 @@ func crawl(
 	}
 
 	defer response.Body.Close()
-	md5sum := md5.New()
 
 	// Overwrite the origin, when redirects occur this contains the value of the
 	// URL that answered. Solves issues with directory listing and relative
@@ -71,15 +69,30 @@ func crawl(
 
 	if slices.Contains(skipContentType, result.ContentType) {
 		// Only determine the MD5 hash and skip the binary data
+		md5sum := md5.New()
 		io.Copy(md5sum, response.Body)
 		result.MD5Sum = hex.EncodeToString(md5sum.Sum(nil))
 		return result, nil
+	} else {
+		foundStrings, md5sum := searchStrings(response.Body, opt, response.ContentLength)
+		result.FoundStrings = foundStrings
+		result.MD5Sum = md5sum
+		return result, nil
 	}
+}
 
-	// Extract the text values from the response
+// Searches for string like values in the given reader
+func searchStrings(
+	r io.Reader,
+	opt Options,
+	bufferStartSize int64,
+) (map[string]struct{}, string) {
+	md5sum := md5.New()
+	result := make(map[string]struct{})
+
 	buffer := make([]byte, 1024)
 	parsedTill := 0
-	allBodyBytes := make([]byte, max(response.ContentLength, 10))
+	allBodyBytes := make([]byte, max(bufferStartSize, 10))
 	quoteIndices := map[byte]int{
 		'\'': -1,
 		'"':  -1,
@@ -87,7 +100,7 @@ func crawl(
 	}
 
 	for {
-		bytesRed, err := response.Body.Read(buffer)
+		bytesRed, err := r.Read(buffer)
 		if bytesRed == 0 && err == io.EOF {
 			break
 		}
@@ -103,8 +116,8 @@ func crawl(
 				// This is a quote/string character so parse it
 				if i >= 0 {
 					bytes := allBodyBytes[i+1 : parsedTill]
-					if utf8.Valid(bytes) && len(bytes) >= minLength && len(bytes) <= maxLength {
-						result.FoundStrings[strings.TrimSpace(string(bytes))] = struct{}{}
+					if utf8.Valid(bytes) && len(bytes) >= opt.MinTextLength && len(bytes) <= opt.MaxTextLength {
+						result[strings.TrimSpace(string(bytes))] = struct{}{}
 					}
 					quoteIndices[b] = -1
 				} else {
@@ -125,8 +138,7 @@ func crawl(
 		}
 	}
 
-	result.MD5Sum = hex.EncodeToString(md5sum.Sum(nil))
-	return result, nil
+	return result, hex.EncodeToString(md5sum.Sum(nil))
 }
 
 func parseContentType(res *http.Response) string {

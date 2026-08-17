@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/nielsdekker/welp/src/modules"
-	"github.com/nielsdekker/welp/src/welp"
+	"github.com/nielsdekker/welp/internal/modules"
+	"github.com/nielsdekker/welp/internal/welp"
 )
 
 func WriteJSON(outChannel chan welp.CrawlResult, allModules []modules.Module, opt welp.Options) error {

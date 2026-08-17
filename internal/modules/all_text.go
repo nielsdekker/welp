@@ -1,6 +1,6 @@
 package modules
 
-import "github.com/nielsdekker/welp/src/welp"
+import "github.com/nielsdekker/welp/internal/welp"
 
 type textModule struct{}
 

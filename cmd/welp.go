@@ -7,10 +7,10 @@ import (
 	"os"
 	"slices"
 
-	"github.com/nielsdekker/welp/src/modules"
-	"github.com/nielsdekker/welp/src/output"
-	"github.com/nielsdekker/welp/src/requests"
-	"github.com/nielsdekker/welp/src/welp"
+	"github.com/nielsdekker/welp/internal/modules"
+	"github.com/nielsdekker/welp/internal/output"
+	"github.com/nielsdekker/welp/internal/requests"
+	"github.com/nielsdekker/welp/internal/welp"
 )
 
 func main() {

@@ -3,8 +3,8 @@ package output
 import (
 	"fmt"
 
-	"github.com/nielsdekker/welp/src/modules"
-	"github.com/nielsdekker/welp/src/welp"
+	"github.com/nielsdekker/welp/internal/modules"
+	"github.com/nielsdekker/welp/internal/welp"
 )
 
 const ESCAPE_RESET = "\033[0m"
