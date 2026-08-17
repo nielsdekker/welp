@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/nielsdekker/welp/src/welp"
+	"github.com/nielsdekker/welp/internal/welp"
 )
 
 type entropyModule struct {

@@ -1,7 +1,7 @@
 package modules
 
 import (
-	"github.com/nielsdekker/welp/src/welp"
+	"github.com/nielsdekker/welp/internal/welp"
 )
 
 type ModuleResult struct {

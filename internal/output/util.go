@@ -3,8 +3,8 @@ package output
 import (
 	"slices"
 
-	"github.com/nielsdekker/welp/src/modules"
-	"github.com/nielsdekker/welp/src/welp"
+	"github.com/nielsdekker/welp/internal/modules"
+	"github.com/nielsdekker/welp/internal/welp"
 )
 
 type ByPath []welp.CrawlResult

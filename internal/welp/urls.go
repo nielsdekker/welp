@@ -25,7 +25,7 @@ func determineUrls(
 			continue
 		}
 
-		if u, err := addStringToUrl(result.Origin, s); err == nil {
+		if u, err := addStringToUrl(result.Origin, s, ""); err == nil {
 			urls = append(urls, u)
 		}
 
@@ -35,7 +35,7 @@ func determineUrls(
 				continue
 			}
 
-			if u, err := addStringToUrl(result.Origin, prefix+s); err == nil {
+			if u, err := addStringToUrl(result.Origin, s, prefix); err == nil {
 				urls = append(urls, u)
 			}
 		}
@@ -47,6 +47,7 @@ func determineUrls(
 func addStringToUrl(
 	origin string,
 	toAdd string,
+	prefix string,
 ) (*url.URL, error) {
 	// Complete url, use as-is
 	if strings.HasPrefix(toAdd, "https://") || strings.HasPrefix(toAdd, "http://") {
@@ -65,11 +66,12 @@ func addStringToUrl(
 	pathAndQuery := strings.Split(toAdd, "?")
 
 	if strings.HasPrefix(toAdd, "/") {
-		asUrl.Path = pathAndQuery[0]
+		asUrl.Path = ""
+		asUrl = asUrl.JoinPath(prefix + pathAndQuery[0])
 	} else if strings.HasSuffix(asUrl.Path, "/") {
-		asUrl = asUrl.JoinPath(pathAndQuery[0])
+		asUrl = asUrl.JoinPath(prefix + pathAndQuery[0])
 	} else {
-		asUrl = asUrl.JoinPath("../", "/", pathAndQuery[0])
+		asUrl = asUrl.JoinPath("../", prefix+pathAndQuery[0])
 	}
 
 	if len(pathAndQuery) > 1 {
