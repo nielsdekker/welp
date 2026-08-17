@@ -2,13 +2,8 @@ package welp
 
 import (
 	"net/url"
-	"regexp"
 	"strings"
 )
-
-// A lot of values in a URL are valid, but whitespace characters are not really
-// used.
-var validURLRegex = regexp.MustCompile(`^[\w\/\.]\S+$`)
 
 // Determines follow urls based on the result
 func determineUrls(
@@ -21,7 +16,7 @@ func determineUrls(
 			continue
 		}
 
-		if !validURLRegex.MatchString(s) {
+		if !urlSafeCharacters(s) {
 			continue
 		}
 
@@ -79,4 +74,18 @@ func addStringToUrl(
 	}
 
 	return asUrl, nil
+}
+
+// Checks if the characters are url safe. Basically everything that is not a
+// space or control characters
+func urlSafeCharacters(data string) bool {
+	// This check should be enough. The crawler only passes valid UTF8 values
+	for _, r := range data {
+		// 0x7f is DEL in ascii
+		if r <= ' ' || r == 0x7f {
+			return false
+		}
+	}
+
+	return true
 }

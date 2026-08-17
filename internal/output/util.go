@@ -2,6 +2,7 @@ package output
 
 import (
 	"slices"
+	"strings"
 
 	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/welp"
@@ -26,8 +27,11 @@ func shouldSkip(result welp.CrawlResult, opt welp.Options) bool {
 	if slices.Contains(opt.FilterCodes, result.StatusCode) {
 		return true
 	}
-	if slices.Contains(opt.FilterContentType, result.ContentType) {
-		return true
+
+	for _, ctToSkip := range opt.FilterContentType {
+		if strings.Contains(result.ContentType, ctToSkip) {
+			return true
+		}
 	}
 
 	return false

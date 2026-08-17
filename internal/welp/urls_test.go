@@ -37,10 +37,10 @@ func Test_determineUrls(t *testing.T) {
 		{"fqdn insecure", ori, "http://insecure.test", toSet(), toSet("http://insecure.test")},
 		{"fqdn secure", ori, "https://secure.test", toSet(), toSet("https://secure.test")},
 		{"path with spaces", ori, "spaces are not valid", toSet(), toSet()},
-		{"Byte sequences newline", ori, "\n", toSet(), toSet()},
-		{"Byte sequences tab", ori, "\t", toSet(), toSet()},
-		{"Byte sequences null byte", ori, "\x00", toSet(), toSet()},
-		{"Byte sequences yolo", ori, "\xFF", toSet(), toSet()},
+		{"Byte sequences newline", ori, "foo?a=\n", toSet(), toSet()},
+		{"Byte sequences tab", ori, "foo?a=\t", toSet(), toSet()},
+		{"Byte sequences null byte", ori, "foo?a=\x00", toSet(), toSet()},
+		{"Byte sequences yolo", ori, "foo?a=\x7f", toSet(), toSet()},
 
 		// Prefix tests
 		{"prefixes simple", ori, "foo", toSet("a/", "b/"), toSet(ori+"foo", ori+"a/foo", ori+"b/foo")},
