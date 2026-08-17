@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"io"
+	"mime"
 	"net/http"
 	"slices"
 	"strings"
@@ -15,19 +16,19 @@ import (
 
 const MB = 1024 * 1024
 
-// List of content types to skip parsing, mostly binary formats
-var skipContentType = []requests.ContentType{
-	requests.ContentTypeZip,
-	requests.ContentTypeAudio,
-	requests.ContentTypeFont,
-	requests.ContentTypeIMG,
-	requests.ContentTypeVideo,
+// List of content type parts to skip parsing, mostly binary formats
+var skipContentType = []string{
+	"application/zip",
+	"audio/",
+	"font/",
+	"img/",
+	"video",
 }
 
 type CrawlResult struct {
 	Origin       string
 	StatusCode   int
-	ContentType  requests.ContentType
+	ContentType  string
 	FoundStrings map[string]struct{}
 	MD5Sum       string
 	depth        int
@@ -61,7 +62,7 @@ func crawl(
 	// paths on these pages.
 	result.Origin = response.Request.URL.String()
 	result.StatusCode = response.StatusCode
-	result.ContentType = requests.ParseContentType(response.Header.Get("Content-Type"))
+	result.ContentType = parseContentType(response)
 
 	if response.ContentLength > 10*MB {
 		// Skip reading, this is to large
@@ -126,4 +127,12 @@ func crawl(
 
 	result.MD5Sum = hex.EncodeToString(md5sum.Sum(nil))
 	return result, nil
+}
+
+func parseContentType(res *http.Response) string {
+	mediaType, _, err := mime.ParseMediaType(res.Header.Get("Content-Type"))
+	if err != nil {
+		return "unknown"
+	}
+	return mediaType
 }

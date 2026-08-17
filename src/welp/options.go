@@ -6,15 +6,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/nielsdekker/welp/src/requests"
 )
 
 type Options struct {
 	Target             *url.URL
 	ConcurrentRequests int
 	FilterCodes        []int
-	FilterContentType  []requests.ContentType
+	FilterContentType  []string
 	ShowHelp           bool
 	MinTextLength      int
 	MaxTextLength      int
@@ -59,7 +57,7 @@ var _opt = []struct {
 		return true
 	}},
 	{"-ft", "--filter-type", "Filters out URL results for the given content type, multiple arguments can be passed", func(opt *Options, nextArg string) bool {
-		opt.FilterContentType = append(opt.FilterContentType, requests.MatchContentType(nextArg)...)
+		opt.FilterContentType = append(opt.FilterContentType, nextArg)
 		return true
 	}},
 	{"-cmin", "--config-min-length", "The min length of a string to consider it a result, defaults to 4", func(opt *Options, nextArg string) bool {
