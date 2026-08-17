@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
@@ -47,12 +48,14 @@ func crawl(
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target, nil)
-	response, err := pool.Do(ctx, req)
-
 	if err != nil {
-		return result, err
+		return result, fmt.Errorf("Unable to create request: %w", err)
 	}
 
+	response, err := pool.Do(ctx, req)
+	if err != nil {
+		return result, fmt.Errorf("Request failed: %w", err)
+	}
 	defer response.Body.Close()
 
 	// Overwrite the origin, when redirects occur this contains the value of the

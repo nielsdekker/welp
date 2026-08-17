@@ -26,6 +26,7 @@ func Test_searchStrings(t *testing.T) {
 		{"Mixed quotes", `var api="stuvwx';`, opt, []string{}, "58a3cf8b3cd86a2c0ec59ef2d42d4963"},
 		{"Quote within quote", `var host="host'name'"`, opt, []string{"host'name'", "name"}, "bc3492e9f8955de224e687c484688156"},
 		{"Comment with single quote", "// Host's\nvar host='hostname'", opt, []string{"hostname"}, "73271d27c27ded7091a0da1af253f80f"},
+		{"Control characters", "var host='host\x00name'", opt, []string{"host\x00name"}, "7db4eb8ca6632e9de352de0c07d14c3d"},
 	}
 
 	for _, tt := range tests {
