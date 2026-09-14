@@ -7,6 +7,7 @@ import (
 	"os"
 	"slices"
 
+	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/output"
 	"github.com/nielsdekker/welp/internal/requests"
@@ -15,10 +16,10 @@ import (
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
-	opt, err := welp.ParseOptions()
+	opt, err := cli.Parse()
 
 	if opt.ShowHelp {
-		opt.PrintHelp()
+		fmt.Println(opt.Usage())
 		os.Exit(0)
 	}
 
@@ -62,7 +63,7 @@ func main() {
 	}
 }
 
-func banner(opt welp.Options) {
+func banner(opt cli.Options) {
 	fmt.Println(` _       __________    ____ 
 | |     / / ____/ /   / __ \
 | | /| / / __/ / /   / /_/ /
@@ -72,7 +73,7 @@ func banner(opt welp.Options) {
 	fmt.Println("\nUsing the following options:")
 	fmt.Printf("  %-24s%s\n", "Target", opt.Target.String())
 	fmt.Printf("  %-24s%d\n", "Concurrent requests", opt.ConcurrentRequests)
-	fmt.Printf("  %-24s%d\n", "Max search depth", opt.MaxSearchDepth)
+	fmt.Printf("  %-24s%d\n", "Max search depth", opt.SearchDepth)
 
 	if len(opt.FilterContentType) > 0 {
 		fmt.Printf("  %-24s%s\n", "Filter content type", opt.FilterContentType)

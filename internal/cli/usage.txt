@@ -1,0 +1,42 @@
+WELP
+
+Main settings:
+  -h, --help
+    Print this help message
+
+  -u, --url
+    The target URL
+
+Crawl settings:
+  -p, --prefix
+    Also checks the string value with the given prefix. Multiple values are
+    possible
+
+  -o, --output
+    Writes JSON output to this file
+
+  -t, --threads
+    Number of concurrent threads
+
+  -d, --max-depth
+    The maximum crawl depth
+
+Filter settings:
+  -fc, --filter-code
+    Filter all responses with this code
+
+  -ft, --filter-type
+    Filters the specified content types from the output
+
+  -tmin, --text-min-length
+    The minimum length for text to be considered
+
+  -tmax, --text-max-length
+    The max length for text to be considered
+
+Additional parsing:
+  -tr, --text-replace
+    Can be used to replace values in the found text
+
+  -m, --module
+    Additional modules to use, valid values are: text,token,entropy

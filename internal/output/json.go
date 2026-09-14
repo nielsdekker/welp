@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/welp"
 )
 
-func WriteJSON(outChannel chan welp.CrawlResult, allModules []modules.Module, opt welp.Options) error {
+func WriteJSON(outChannel chan welp.CrawlResult, allModules []modules.Module, opt cli.Options) error {
 	f, err := os.Create(opt.OutputFile)
 
 	if err != nil {

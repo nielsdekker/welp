@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/welp"
 )
@@ -23,7 +24,7 @@ func applyModules(result welp.CrawlResult, allModules []modules.Module) map[stri
 	return results
 }
 
-func shouldSkip(result welp.CrawlResult, opt welp.Options) bool {
+func shouldSkip(result welp.CrawlResult, opt cli.Options) bool {
 	if slices.Contains(opt.FilterCodes, result.StatusCode) {
 		return true
 	}

@@ -25,6 +25,20 @@ A JSON representation of the output can also be written to a file:
 welp -u http://target.test --output out.json
 ```
 
+## Filtering the output
+
+By default 404 pages are filtered in the output but additional filter options
+can be given.
+
+```bash
+# Removes all responses with a 404 or 500 status code from the output
+welp -u http://target.test -fc 404 --filter-code 500
+
+# Removes all responses with a content type that matches # `-ft text` matches
+# `text/html`, `test/css`, etc.
+welp -u http://target.test -ft text -ft image
+```
+
 ## Adding prefixes
 
 It's possible the JavaScript code contains a snippet as follows:
@@ -67,16 +81,19 @@ Modules can be used as follows:
 welp -u http://target.test --module text -m token
 ```
 
-## Filtering the output
+## Replacing text values
 
-By default 404 pages are filtered in the output but additional filter options
-can be given.
+Support is added to replace text values in found values. Useful if for example
+string interpolation is used in JavaScript files. For example:
+
+```javascript
+fetch(`/rest/user/${id}`)
+```
 
 ```bash
-# Removes all responses with a 404 or 500 status code from the output
-welp -u http://target.test -fc 404 --filter-code 500
-
-# Removes all responses with a content type that matches # `-ft text` matches
-# `text/html`, `test/css`, etc.
-welp -u http://target.test -ft text -ft image
+# Example usage with welp, will result in a call to `/rest/user/123`. A
+# shorthand with `-tr` is also possible
+welp -u http://target.test \
+    --text-replacement '${*}' "123" \
+    -tr '${*}' '123'
 ```

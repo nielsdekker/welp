@@ -4,17 +4,18 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/requests"
 )
 
 type Welp struct {
-	options     Options
+	options     cli.Options
 	requestPool requests.Pool
 }
 
 func New(
 	requestPool requests.Pool,
-	opt Options,
+	opt cli.Options,
 ) Welp {
 	return Welp{
 		options:     opt,
@@ -40,7 +41,7 @@ func (w Welp) StartCrawl(ctx context.Context, outputChannel chan CrawlResult) {
 			counter--
 			_, md5match := md5Cache[r.MD5Sum]
 			isErrorResponse := r.StatusCode <= 0 || r.StatusCode >= 400
-			reachedMaxDepth := r.depth > w.options.MaxSearchDepth
+			reachedMaxDepth := r.depth > w.options.SearchDepth
 
 			if !md5match {
 				// New result so store it
