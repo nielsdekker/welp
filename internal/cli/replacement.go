@@ -33,8 +33,6 @@ func NewReplacement(
 	}
 }
 
-// TODO, via DI in de parser gooien
-
 // Applies the text replacement to the given string value, if no replacement is
 // necessary the given string is returned.
 func (t TextReplacement) Apply(input string) string {

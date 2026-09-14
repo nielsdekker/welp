@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//go:embed usage.md
+//go:embed usage.txt
 var usage string
 
 type Options struct {

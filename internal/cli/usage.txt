@@ -40,9 +40,3 @@ Additional parsing:
 
   -m, --module
     Additional modules to use, valid values are: text,token,entropy
-
-Examples:
-
-```bash
-
-```
