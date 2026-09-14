@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 
+	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/welp"
 )
@@ -13,7 +14,7 @@ const ESCAPE_GREEN = "\033[32m"
 const ESCAPE_BLUE = "\033[34m"
 const ESCAPE_BOLD = "\033[1m"
 
-func WriteTTY(outChannel chan welp.CrawlResult, allModules []modules.Module, opt welp.Options) {
+func WriteTTY(outChannel chan welp.CrawlResult, allModules []modules.Module, opt cli.Options) {
 	for r := range outChannel {
 		if shouldSkip(r, opt) {
 			continue

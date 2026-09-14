@@ -5,17 +5,18 @@ import (
 	"testing"
 
 	"github.com/nielsdekker/welp/internal/_tests/asserts"
+	"github.com/nielsdekker/welp/internal/cli"
 )
 
 func Test_searchStrings(t *testing.T) {
-	var opt = Options{
-		MinTextLength: 4,
-		MaxTextLength: 100,
+	var opt = cli.Options{
+		TextMinLength: 4,
+		TextMaxLength: 100,
 	}
 	var tests = []struct {
 		name        string
 		data        string
-		opt         Options
+		opt         cli.Options
 		expected    []string
 		expectedMd5 string
 	}{

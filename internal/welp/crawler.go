@@ -12,6 +12,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/requests"
 )
 
@@ -23,7 +24,7 @@ var skipContentType = []string{
 	"audio/",
 	"font/",
 	"img/",
-	"video",
+	"video/",
 }
 
 type CrawlResult struct {
@@ -39,7 +40,7 @@ func crawl(
 	ctx context.Context,
 	target string,
 	pool requests.Pool,
-	opt Options,
+	opt cli.Options,
 ) (CrawlResult, error) {
 	result := CrawlResult{
 		Origin:       target,
@@ -87,7 +88,7 @@ func crawl(
 // Searches for string like values in the given reader
 func searchStrings(
 	r io.Reader,
-	opt Options,
+	opt cli.Options,
 	bufferStartSize int64,
 ) (map[string]struct{}, string) {
 	md5sum := md5.New()
@@ -119,8 +120,13 @@ func searchStrings(
 				// This is a quote/string character so parse it
 				if i >= 0 {
 					bytes := allBodyBytes[i+1 : parsedTill]
-					if utf8.Valid(bytes) && len(bytes) >= opt.MinTextLength && len(bytes) <= opt.MaxTextLength {
-						result[strings.TrimSpace(string(bytes))] = struct{}{}
+					if utf8.Valid(bytes) && len(bytes) >= opt.TextMinLength && len(bytes) <= opt.TextMaxLength {
+						foundValue := strings.TrimSpace(string(bytes))
+						for _, r := range opt.TextReplacements {
+							foundValue = r.Apply(foundValue)
+						}
+
+						result[foundValue] = struct{}{}
 					}
 					quoteIndices[b] = -1
 				} else {

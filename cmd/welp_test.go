@@ -8,6 +8,7 @@ import (
 
 	"github.com/nielsdekker/welp/internal/_tests/asserts"
 	"github.com/nielsdekker/welp/internal/_tests/mocks"
+	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/welp"
 )
@@ -52,12 +53,12 @@ func newWelp(target string) []welp.CrawlResult {
 
 	w := welp.New(
 		mocks.GetPool(),
-		welp.Options{
-			Target:         targetURL,
-			MaxSearchDepth: 5,
-			MinTextLength:  1,
-			MaxTextLength:  128,
-			Prefixes:       map[string]struct{}{},
+		cli.Options{
+			Target:        targetURL,
+			SearchDepth:   5,
+			TextMinLength: 1,
+			TextMaxLength: 128,
+			Prefixes:      map[string]struct{}{},
 		},
 	)
 
