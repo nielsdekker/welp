@@ -2,6 +2,7 @@ package requests
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,11 +20,20 @@ type pool struct {
 	openRequests int
 }
 
-func NewPool(concurrentRequests int) Pool {
+func NewPool(concurrentRequests int, ignoreSSL bool) Pool {
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: ignoreSSL,
+	}
+
 	return &pool{
 		semaphore: make(chan struct{}, concurrentRequests),
 		client: http.Client{
 			Timeout: 5 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: ignoreSSL,
+				},
+			},
 		},
 		poolSize: concurrentRequests,
 	}

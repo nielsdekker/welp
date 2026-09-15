@@ -30,7 +30,7 @@ func main() {
 
 	banner(opt)
 
-	requestPool := requests.NewPool(opt.ConcurrentRequests)
+	requestPool := requests.NewPool(opt.ConcurrentRequests, opt.SSLIgnore)
 	w := welp.New(
 		requestPool,
 		opt,
