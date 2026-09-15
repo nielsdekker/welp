@@ -9,6 +9,7 @@ var mapping = map[string]string{
 	"-o":    "--output",
 	"-t":    "--threads",
 	"-d":    "--max-depth",
+	"-k":    "--insecure",
 	"-fc":   "--filter-code",
 	"-ft":   "--filter-type",
 	"-tr":   "--text-replace",

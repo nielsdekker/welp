@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"slices"
 	"testing"
@@ -17,8 +18,8 @@ func TestSpa(t *testing.T) {
 	results := newWelp("http://spa.test/")
 
 	asserts.Eq(t, len(results), 2)
-	resultsContainPath(t, results, "http://spa.test/")
-	resultsContainPath(t, results, "http://spa.test/style/default.css")
+	resultsContain(t, results, "http://spa.test/")
+	resultsContain(t, results, "http://spa.test/style/default.css")
 }
 
 func TestToken(t *testing.T) {
@@ -43,6 +44,16 @@ func TestToken(t *testing.T) {
 
 	asserts.Eq(t, len(allEntropy), 1)
 	resultsContainText(t, allEntropy, "zILEpsOAxrvFnMOOxZTMkVrItcyZw6jPpCHHolXFnsaiy5/OgMSywrjGlMW4zLHNhsqLyLrIsD8kxpY=")
+}
+
+func TestSubdomain(t *testing.T) {
+	results := newWelp("http://sub.test/")
+
+	asserts.Eq(t, len(results), 3)
+	fmt.Println(results)
+	resultsContain(t, results, "http://sub.test/")
+	resultsContain(t, results, "http://sub.sub.test/")
+	resultsContain(t, results, "http://sub.sub.test/secret")
 }
 
 func newWelp(target string) []welp.CrawlResult {
@@ -76,7 +87,7 @@ func newWelp(target string) []welp.CrawlResult {
 	return results
 }
 
-func resultsContainPath(t *testing.T, results []welp.CrawlResult, path string) {
+func resultsContain(t *testing.T, results []welp.CrawlResult, path string) {
 	if !slices.ContainsFunc(results, func(res welp.CrawlResult) bool {
 		return res.Origin == path || res.Origin+"/" == path
 	}) {

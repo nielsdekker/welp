@@ -17,6 +17,7 @@ type Options struct {
 	ConcurrentRequests int
 	ShowHelp           bool
 	SearchDepth        int
+	SSLIgnore          bool
 	Modules            map[string]struct{}
 	Prefixes           map[string]struct{}
 	OutputFile         string
@@ -29,6 +30,7 @@ type Options struct {
 
 func Parse() (Options, error) {
 	opt := Options{
+		SSLIgnore:          false,
 		Modules:            map[string]struct{}{},
 		Prefixes:           map[string]struct{}{},
 		ConcurrentRequests: 10,
@@ -39,7 +41,6 @@ func Parse() (Options, error) {
 
 	for i := 1; i < len(os.Args); i++ {
 		arg := os.Args[i]
-
 		if longhand, ok := mapping[arg]; ok {
 			// Arg was given in shorthand form, use longhand form for matching
 			// the correct options.
@@ -79,6 +80,8 @@ func Parse() (Options, error) {
 			if c, err := intArg(i); err == nil {
 				opt.SearchDepth = c
 			}
+		case "insecure":
+			opt.SSLIgnore = true
 		case "--filter-code":
 			i++
 			if c, err := intArg(i); err == nil {

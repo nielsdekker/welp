@@ -3,6 +3,7 @@ package welp
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/requests"
@@ -54,8 +55,9 @@ func (w Welp) StartCrawl(ctx context.Context, outputChannel chan CrawlResult) {
 
 			if !md5match && !isErrorResponse && !reachedMaxDepth {
 				for _, newURL := range determineUrls(r, w.options.Prefixes) {
-					if newURL.Host != w.options.Target.Host {
-						// Skip going outside the target domain
+					if !strings.HasSuffix(newURL.Host, w.options.Target.Host) {
+						// Skip going outside the target domain but allow
+						// subdomains.
 						continue
 					}
 
