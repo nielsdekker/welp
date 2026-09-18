@@ -1,33 +1,24 @@
 package welp
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/nielsdekker/welp/internal/_tests/asserts"
-	"github.com/nielsdekker/welp/internal/cli"
 )
 
 func Test_searchStrings(t *testing.T) {
-	var opt = cli.Options{
-		TextMinLength: 4,
-		TextMaxLength: 100,
-	}
 	var tests = []struct {
-		name        string
-		data        string
-		opt         cli.Options
-		expected    []string
-		expectedMd5 string
+		name     string
+		data     string
+		expected []string
 	}{
-		{"No text", "", opt, []string{}, "d41d8cd98f00b204e9800998ecf8427e"},
-		{"Single quotes", `var api='abcdef'; const host='hostname';`, opt, []string{"abcdef", "hostname"}, "a42331bb4301d58720903948512610d3"},
-		{"Double quotes", `var api="ghijkl"; const host='hostname';`, opt, []string{"ghijkl", "hostname"}, "cd56f7ccd1a3355ffcc9fcbccc95778e"},
-		{"Backticks", "var api=`mnopqr`; const host=`hostname`;", opt, []string{"mnopqr", "hostname"}, "0a67c3186c9e928a68e2ddd5a5eca141"},
-		{"Mixed quotes", `var api="stuvwx';`, opt, []string{}, "58a3cf8b3cd86a2c0ec59ef2d42d4963"},
-		{"Quote within quote", `var host="host'name'"`, opt, []string{"host'name'", "name"}, "bc3492e9f8955de224e687c484688156"},
-		{"Comment with single quote", "// Host's\nvar host='hostname'", opt, []string{"hostname"}, "73271d27c27ded7091a0da1af253f80f"},
-		{"Control characters", "var host='host\x00name'", opt, []string{"host\x00name"}, "7db4eb8ca6632e9de352de0c07d14c3d"},
+		{"No text", "", []string{}},
+		{"Single quotes", `var api='abcdef'; const host='hostname';`, []string{"abcdef", "hostname"}},
+		{"Double quotes", `var api="ghijkl"; const host='hostname';`, []string{"ghijkl", "hostname"}},
+		{"Backticks", "var api=`mnopqr`; const host=`hostname`;", []string{"mnopqr", "hostname"}},
+		{"Mixed quotes", `var api="stuvwx';`, []string{}},
+		{"Quote within quote", `var host="host'name'"`, []string{"host'name'", "name"}},
+		{"Control characters", "var host='host\x00name'", []string{"host\x00name"}},
 	}
 
 	for _, tt := range tests {
@@ -39,9 +30,8 @@ func Test_searchStrings(t *testing.T) {
 				asSet[r] = struct{}{}
 			}
 
-			foundStrings, md5sum := searchStrings(bytes.NewReader([]byte(tt.data)), tt.opt, 1)
+			foundStrings := searchStrings([]byte(tt.data))
 			asserts.KeysEq(t, asSet, foundStrings)
-			asserts.Eq(t, md5sum, tt.expectedMd5)
 		})
 	}
 }

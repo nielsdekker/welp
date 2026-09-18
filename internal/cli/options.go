@@ -23,9 +23,6 @@ type Options struct {
 	OutputFile         string
 	FilterCodes        []int
 	FilterContentType  []string
-	TextReplacements   []TextReplacement
-	TextMinLength      int
-	TextMaxLength      int
 }
 
 func Parse() (Options, error) {
@@ -35,8 +32,6 @@ func Parse() (Options, error) {
 		Prefixes:           map[string]struct{}{},
 		ConcurrentRequests: 10,
 		SearchDepth:        25,
-		TextMinLength:      4,
-		TextMaxLength:      200,
 	}
 
 	for i := 1; i < len(os.Args); i++ {
@@ -91,24 +86,6 @@ func Parse() (Options, error) {
 			i++
 			if t, err := stringArg(i); err == nil {
 				opt.FilterContentType = append(opt.FilterContentType, t)
-			}
-		case "--text-min-length":
-			i++
-			if l, err := intArg(i); err == nil {
-				opt.TextMinLength = l
-			}
-		case "--text-max-length":
-			i++
-			if l, err := intArg(i); err == nil {
-				opt.TextMaxLength = l
-			}
-		case "--text-replace":
-			g, errG := stringArg(i + 1)
-			r, errR := stringArg(i + 2)
-			i += 2
-
-			if errG == nil && errR == nil {
-				opt.TextReplacements = append(opt.TextReplacements, NewReplacement(g, r))
 			}
 		}
 	}

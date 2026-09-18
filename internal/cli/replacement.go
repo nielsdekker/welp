@@ -1,5 +1,6 @@
 package cli
 
+// TODO Re-implement this as a module
 import (
 	"fmt"
 	"strings"
@@ -36,7 +37,7 @@ func NewReplacement(
 // Applies the text replacement to the given string value, if no replacement is
 // necessary the given string is returned.
 func (t TextReplacement) Apply(input string) string {
-	if len(t.glob) == 0 {
+	if len(t.glob) == 0 || len(t.parts) == 0 {
 		return input
 	}
 

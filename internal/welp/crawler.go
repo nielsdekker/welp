@@ -2,45 +2,31 @@ package welp
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"mime"
 	"net/http"
-	"slices"
 	"strings"
 	"unicode/utf8"
 
-	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/requests"
 )
 
-const MB = 1024 * 1024
-
-// List of content type parts to skip parsing, mostly binary formats
-var skipContentType = []string{
-	"application/zip",
-	"audio/",
-	"font/",
-	"img/",
-	"video/",
-}
+const MB = int64(1024 * 1024)
 
 type CrawlResult struct {
 	Origin       string
 	StatusCode   int
 	ContentType  string
 	FoundStrings map[string]struct{}
-	MD5Sum       string
-	depth        int
+	Depth        int
+	Raw          []byte
 }
 
 func crawl(
 	ctx context.Context,
 	target string,
 	pool requests.Pool,
-	opt cli.Options,
 ) (CrawlResult, error) {
 	result := CrawlResult{
 		Origin:       target,
@@ -66,88 +52,52 @@ func crawl(
 	result.StatusCode = response.StatusCode
 	result.ContentType = parseContentType(response)
 
-	if response.ContentLength > 10*MB {
-		// Skip reading, this is to large
-		return result, nil
+	// Read at most the first 10MB
+	toRead := 10 * MB
+	if response.ContentLength > 0 {
+		toRead = min(response.ContentLength, toRead)
 	}
 
-	if slices.Contains(skipContentType, result.ContentType) {
-		// Only determine the MD5 hash and skip the binary data
-		md5sum := md5.New()
-		io.Copy(md5sum, response.Body)
-		result.MD5Sum = hex.EncodeToString(md5sum.Sum(nil))
-		return result, nil
-	} else {
-		foundStrings, md5sum := searchStrings(response.Body, opt, response.ContentLength)
-		result.FoundStrings = foundStrings
-		result.MD5Sum = md5sum
-		return result, nil
+	buf := make([]byte, toRead)
+	red, err := response.Body.Read(buf)
+
+	if err != nil && err != io.EOF {
+		return result, err
 	}
+
+	result.Raw = buf[0:red]
+	result.FoundStrings = searchStrings(result.Raw)
+
+	return result, nil
 }
 
 // Searches for string like values in the given reader
-func searchStrings(
-	r io.Reader,
-	opt cli.Options,
-	bufferStartSize int64,
-) (map[string]struct{}, string) {
-	md5sum := md5.New()
+func searchStrings(raw []byte) map[string]struct{} {
 	result := make(map[string]struct{})
 
-	buffer := make([]byte, 1024)
-	parsedTill := 0
-	allBodyBytes := make([]byte, max(bufferStartSize, 10))
 	quoteIndices := map[byte]int{
 		'\'': -1,
 		'"':  -1,
 		'`':  -1,
 	}
 
-	for {
-		bytesRed, err := r.Read(buffer)
-		if bytesRed == 0 && err == io.EOF {
-			break
-		}
-
-		// Update md5 and the all body values
-		md5sum.Write(buffer[0:bytesRed])
-		allBodyBytes = append(allBodyBytes, buffer[0:bytesRed]...)
-
-		for parsedTill < len(allBodyBytes) {
-			b := allBodyBytes[parsedTill]
-
-			if i, ok := quoteIndices[b]; ok {
-				// This is a quote/string character so parse it
-				if i >= 0 {
-					bytes := allBodyBytes[i+1 : parsedTill]
-					if utf8.Valid(bytes) && len(bytes) >= opt.TextMinLength && len(bytes) <= opt.TextMaxLength {
-						foundValue := strings.TrimSpace(string(bytes))
-						for _, r := range opt.TextReplacements {
-							foundValue = r.Apply(foundValue)
-						}
-
-						result[foundValue] = struct{}{}
-					}
-					quoteIndices[b] = -1
-				} else {
-					quoteIndices[b] = parsedTill
+	for rawIndex, b := range raw {
+		if quoteIndex, ok := quoteIndices[b]; ok {
+			// This is a quote/string character so parse it
+			if quoteIndex >= 0 {
+				bytes := raw[quoteIndex+1 : rawIndex]
+				if utf8.Valid(bytes) {
+					foundValue := strings.TrimSpace(string(bytes))
+					result[foundValue] = struct{}{}
 				}
-
+				quoteIndices[b] = -1
 			} else {
-				switch allBodyBytes[parsedTill] {
-				case '\n':
-					// Reset all indices, strings will not cross newlines most
-					// of the times.
-					for k, _ := range quoteIndices {
-						quoteIndices[k] = -1
-					}
-				}
+				quoteIndices[b] = rawIndex
 			}
-			parsedTill++
 		}
 	}
 
-	return result, hex.EncodeToString(md5sum.Sum(nil))
+	return result
 }
 
 func parseContentType(res *http.Response) string {
