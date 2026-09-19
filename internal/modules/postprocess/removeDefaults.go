@@ -1,8 +1,24 @@
-package welp
+package postprocess
 
-// List of hardcoded values to always ignore. Contain standard texts that are
-// present on a lot of pages. All values are lowercase.
-var ignoreList = map[string]struct{}{
+import (
+	"github.com/nielsdekker/welp/internal/welp"
+)
+
+type removeDefaults struct{}
+
+func NewRemoveDefaults() removeDefaults {
+	return removeDefaults{}
+}
+
+func (m removeDefaults) PostProcess(result *welp.CrawlResult) {
+	for k := range result.FoundStrings {
+		if _, ok := defaultStringValues[k]; ok {
+			delete(result.FoundStrings, k)
+		}
+	}
+}
+
+var defaultStringValues = map[string]struct{}{
 	// products
 	"android":   struct{}{},
 	"chrome":    struct{}{},

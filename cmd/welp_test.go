@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"slices"
 	"testing"
@@ -10,47 +9,25 @@ import (
 	"github.com/nielsdekker/welp/internal/_tests/asserts"
 	"github.com/nielsdekker/welp/internal/_tests/mocks"
 	"github.com/nielsdekker/welp/internal/cli"
-	"github.com/nielsdekker/welp/internal/modules"
+	"github.com/nielsdekker/welp/internal/modules/postprocess"
+	"github.com/nielsdekker/welp/internal/modules/requestfilters"
+	"github.com/nielsdekker/welp/internal/modules/resultfilters"
 	"github.com/nielsdekker/welp/internal/welp"
 )
 
 func TestSpa(t *testing.T) {
 	results := newWelp("http://spa.test/")
 
-	asserts.Eq(t, len(results), 2)
+	asserts.Eq(t, len(results), 3)
 	resultsContain(t, results, "http://spa.test/")
+	resultsContain(t, results, "http://spa.test/other")
 	resultsContain(t, results, "http://spa.test/style/default.css")
-}
-
-func TestToken(t *testing.T) {
-	results := newWelp("http://token.test/")
-
-	asserts.Eq(t, len(results), 4)
-
-	tokenModule := modules.NewToken()
-	entropyModule := modules.NewEntropy()
-
-	allTokens := []modules.ModuleResult{}
-	allEntropy := []modules.ModuleResult{}
-	for _, r := range results {
-		allTokens = append(allTokens, tokenModule.Handle(r)...)
-		allEntropy = append(allEntropy, entropyModule.Handle(r)...)
-	}
-
-	asserts.Eq(t, len(allTokens), 3)
-	resultsContainText(t, allTokens, "ghp_123abc")
-	resultsContainText(t, allTokens, "sk-123-456")
-	resultsContainText(t, allTokens, "ey123.eyabc.def")
-
-	asserts.Eq(t, len(allEntropy), 1)
-	resultsContainText(t, allEntropy, "zILEpsOAxrvFnMOOxZTMkVrItcyZw6jPpCHHolXFnsaiy5/OgMSywrjGlMW4zLHNhsqLyLrIsD8kxpY=")
 }
 
 func TestSubdomain(t *testing.T) {
 	results := newWelp("http://sub.test/")
 
 	asserts.Eq(t, len(results), 3)
-	fmt.Println(results)
 	resultsContain(t, results, "http://sub.test/")
 	resultsContain(t, results, "http://sub.sub.test/")
 	resultsContain(t, results, "http://sub.sub.test/secret")
@@ -62,8 +39,8 @@ func newWelp(target string) []welp.CrawlResult {
 		panic(err)
 	}
 
+	out := &mockOutput{allResults: []welp.CrawlResult{}}
 	w := welp.New(
-		mocks.GetPool(),
 		cli.Options{
 			Target:        targetURL,
 			SearchDepth:   5,
@@ -71,20 +48,19 @@ func newWelp(target string) []welp.CrawlResult {
 			TextMaxLength: 128,
 			Prefixes:      map[string]struct{}{},
 		},
+		mocks.GetPool(),
+		[]welp.ResultFilterModule{resultfilters.NewMD5Filter()},
+		[]welp.RequestFilterModule{
+			requestfilters.NewDomainFilter(targetURL),
+			requestfilters.NewVisitedFilter(),
+		},
+		[]welp.PostProcessModule{postprocess.NewRemoveDefaults()},
+		[]welp.OutputModule{out},
 	)
 
-	outChannel := make(chan welp.CrawlResult)
-	go func() {
-		w.StartCrawl(context.Background(), outChannel)
-		close(outChannel)
-	}()
+	w.StartCrawl(context.Background())
 
-	results := []welp.CrawlResult{}
-	for r := range outChannel {
-		results = append(results, r)
-	}
-
-	return results
+	return out.allResults
 }
 
 func resultsContain(t *testing.T, results []welp.CrawlResult, path string) {
@@ -95,10 +71,10 @@ func resultsContain(t *testing.T, results []welp.CrawlResult, path string) {
 	}
 }
 
-func resultsContainText(t *testing.T, results []modules.ModuleResult, txt string) {
-	if !slices.ContainsFunc(results, func(res modules.ModuleResult) bool {
-		return res.FoundValue == txt
-	}) {
-		t.Errorf("Expected \"%s\" to be in the module results", txt)
-	}
+type mockOutput struct {
+	allResults []welp.CrawlResult
+}
+
+func (m *mockOutput) Write(result welp.CrawlResult) {
+	m.allResults = append(m.allResults, result)
 }

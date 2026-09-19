@@ -12,10 +12,6 @@ func determineUrls(
 ) []*url.URL {
 	urls := []*url.URL{}
 	for s := range result.FoundStrings {
-		if _, ok := ignoreList[strings.ToLower(s)]; ok {
-			continue
-		}
-
 		if !urlSafeCharacters(s) {
 			continue
 		}

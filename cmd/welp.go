@@ -8,14 +8,16 @@ import (
 	"slices"
 
 	"github.com/nielsdekker/welp/internal/cli"
-	"github.com/nielsdekker/welp/internal/modules"
-	"github.com/nielsdekker/welp/internal/output"
+	"github.com/nielsdekker/welp/internal/modules/output"
+	"github.com/nielsdekker/welp/internal/modules/postprocess"
+	"github.com/nielsdekker/welp/internal/modules/requestfilters"
+	"github.com/nielsdekker/welp/internal/modules/resultfilters"
 	"github.com/nielsdekker/welp/internal/requests"
 	"github.com/nielsdekker/welp/internal/welp"
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 	opt, err := cli.Parse()
 
 	if opt.ShowHelp {
@@ -32,35 +34,22 @@ func main() {
 
 	requestPool := requests.NewPool(opt.ConcurrentRequests, opt.SSLIgnore)
 	w := welp.New(
-		requestPool,
 		opt,
+		requestPool,
+		[]welp.ResultFilterModule{
+			resultfilters.NewContentTypeFilter(),
+			resultfilters.NewMD5Filter(),
+		},
+		[]welp.RequestFilterModule{
+			requestfilters.NewUrlLengthFilter(200),
+			requestfilters.NewDomainFilter(opt.Target),
+			requestfilters.NewVisitedFilter(),
+		},
+		[]welp.PostProcessModule{postprocess.NewRemoveDefaults()},
+		[]welp.OutputModule{output.NewTTYOutput(opt.FilterCodes, opt.FilterContentType)},
 	)
 
-	allModules := []modules.Module{}
-	for m := range opt.Modules {
-		switch m {
-		case "text":
-			allModules = append(allModules, modules.NewAllText())
-		case "token":
-			allModules = append(allModules, modules.NewToken())
-		case "entropy":
-			allModules = append(allModules, modules.NewEntropy())
-		}
-	}
-
-	out := make(chan welp.CrawlResult)
-	go func() {
-		w.StartCrawl(ctx, out)
-		close(out)
-	}()
-
-	if opt.OutputFile != "" {
-		if err := output.WriteJSON(out, allModules, opt); err != nil {
-			cancel()
-		}
-	} else {
-		output.WriteTTY(out, allModules, opt)
-	}
+	w.StartCrawl(ctx)
 }
 
 func banner(opt cli.Options) {
