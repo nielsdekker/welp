@@ -35,7 +35,7 @@ func (m ttyOutput) Write(r welp.CrawlResult) {
 	if slices.Contains(m.filterCodes, r.StatusCode) {
 		return
 	}
-	if !slices.ContainsFunc(m.filterContentType, func(e string) bool {
+	if slices.ContainsFunc(m.filterContentType, func(e string) bool {
 		return strings.HasPrefix(r.ContentType, e)
 	}) {
 		return

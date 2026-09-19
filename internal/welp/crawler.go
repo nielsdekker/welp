@@ -6,10 +6,9 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/nielsdekker/welp/internal/requests"
+	"github.com/nielsdekker/welp/internal/tree"
 )
 
 const MB = int64(1024 * 1024)
@@ -53,51 +52,28 @@ func crawl(
 	result.ContentType = parseContentType(response)
 
 	// Read at most the first 10MB
-	toRead := 10 * MB
-	if response.ContentLength > 0 {
-		toRead = min(response.ContentLength, toRead)
-	}
+	result.Raw = []byte{}
+	for {
+		b := make([]byte, 1024)
+		red, err := response.Body.Read(b)
+		result.Raw = append(result.Raw, b[0:red]...)
 
-	buf := make([]byte, toRead)
-	red, err := response.Body.Read(buf)
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			// Not an EOF err but something, report it
+			fmt.Printf("err: %v\n", err)
+			break
+		}
+	}
 
 	if err != nil && err != io.EOF {
 		return result, err
 	}
 
-	result.Raw = buf[0:red]
-	result.FoundStrings = searchStrings(result.Raw)
+	result.FoundStrings = tree.StringValues(result.Raw, result.ContentType)
 
 	return result, nil
-}
-
-// Searches for string like values in the given reader
-func searchStrings(raw []byte) map[string]struct{} {
-	result := make(map[string]struct{})
-
-	quoteIndices := map[byte]int{
-		'\'': -1,
-		'"':  -1,
-		'`':  -1,
-	}
-
-	for rawIndex, b := range raw {
-		if quoteIndex, ok := quoteIndices[b]; ok {
-			// This is a quote/string character so parse it
-			if quoteIndex >= 0 {
-				bytes := raw[quoteIndex+1 : rawIndex]
-				if utf8.Valid(bytes) {
-					foundValue := strings.TrimSpace(string(bytes))
-					result[foundValue] = struct{}{}
-				}
-				quoteIndices[b] = -1
-			} else {
-				quoteIndices[b] = rawIndex
-			}
-		}
-	}
-
-	return result
 }
 
 func parseContentType(res *http.Response) string {
