@@ -36,12 +36,16 @@ func parseJS(raw []byte) map[string]struct{} {
 	cursor := tree_sitter.NewQueryCursor()
 	defer cursor.Close()
 
-	matches := cursor.Matches(q, tree.RootNode(), raw)
-	current := matches.Next()
-
 	retValue := make(map[string]struct{})
-	for current != nil {
-		for _, c := range current.Captures {
+	matches := cursor.Matches(q, tree.RootNode(), raw)
+
+	for {
+		currentMatch := matches.Next()
+		if currentMatch == nil {
+			break
+		}
+
+		for _, c := range currentMatch.Captures {
 			// This still contains the `"` or ``` values so remove those. Should
 			// be possible in the treesitter query but then template strings get
 			// multiple values/are split which is not something we want.
@@ -50,7 +54,6 @@ func parseJS(raw []byte) map[string]struct{} {
 			})
 			retValue[strValue] = struct{}{}
 		}
-		current = matches.Next()
 	}
 
 	return retValue
