@@ -1,3 +1,6 @@
+#!make
+-include .env
+
 .PHONY: build
 .PHONY: test
 
@@ -13,4 +16,3 @@ build:
 
 test:
 	@go test ./...
-
