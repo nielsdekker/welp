@@ -11,13 +11,15 @@ jobs:
     timeout-minutes: 15
     name: "Create artifacts"
     runs-on: "ubuntu-latest"
+    env:
+      GOARCH: ${{ matrix.arch }}
+      GOOS: ${{ matrix.os }}
 
     steps:
-      - name: Create .env
+      - name: Create .env for caching
         run: |
-          echo 'export GOARCH=${{ matrix.arch }}' > .env
-          echo 'export GOOS=${{ matrix.os }}' >> .env
-
+          echo $GOARCH > .env
+          echo $GOOS' >> .env
       - run: cat .env
 
       - uses: "actions/checkout@v7"

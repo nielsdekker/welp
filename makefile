@@ -1,6 +1,3 @@
-#!make
--include .env
-
 .PHONY: build
 .PHONY: test
 
@@ -9,7 +6,6 @@ help:
 	@echo "make test    Runs the tests"
 
 build:
-	@echo "make debug $$GOOS $$GOARCH"
 	@go build \
 		-ldflags="-s -w" \
 		-o out/welp \
