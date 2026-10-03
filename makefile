@@ -9,6 +9,7 @@ help:
 	@echo "make test    Runs the tests"
 
 build:
+	@echo "make debug $$GOOS $$GOARCH"
 	@go build \
 		-ldflags="-s -w" \
 		-o out/welp \

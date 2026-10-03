@@ -18,6 +18,8 @@ jobs:
           echo 'export GOARCH=${{ matrix.arch }}' > .env
           echo 'export GOOS=${{ matrix.os }}' >> .env
 
+      - run: cat .env
+
       - uses: "actions/checkout@v7"
       - uses: "actions/setup-go@v7"
         with:
