@@ -19,12 +19,6 @@ The simplest call is as follows:
 welp -u http://target.test
 ```
 
-A JSON representation of the output can also be written to a file:
-
-```bash
-welp -u http://target.test --output out.json
-```
-
 ## Filtering the output
 
 By default 404 pages are filtered in the output but additional filter options
@@ -65,35 +59,3 @@ In short the above example will make calls to:
 - `/users`
 - `/rest/v2/users`
 - `/rest/v3/users`
-
-## Using modules
-
-Some modules are included to parse the output. These are:
-
-- `text`, Will also print all the found text values
-- `token`, Matches certain token types
-- `entropy`, Checks the text has a certain entropy level. In case `tokens`
-  doesn't find it
-
-Modules can be used as follows:
-
-```bash
-welp -u http://target.test --module text -m token
-```
-
-## Replacing text values
-
-Support is added to replace text values in found values. Useful if for example
-string interpolation is used in JavaScript files. For example:
-
-```javascript
-fetch(`/rest/user/${id}`)
-```
-
-```bash
-# Example usage with welp, will result in a call to `/rest/user/123`. A
-# shorthand with `-tr` is also possible
-welp -u http://target.test \
-    --text-replacement '${*}' "123" \
-    -tr '${*}' '123'
-```

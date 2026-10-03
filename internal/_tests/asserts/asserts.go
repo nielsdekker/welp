@@ -19,3 +19,16 @@ func KeysEq[K comparable](t *testing.T, expected map[K]struct{}, actual map[K]st
 		}
 	}
 }
+
+func SliceEq[K comparable](t *testing.T, expected []K, actual []K) {
+	Eq(t, len(expected), len(actual))
+
+	for i := range expected {
+		if i >= len(actual) {
+			// No need to fail, already failed for the length check
+			continue
+		}
+
+		Eq(t, expected[i], actual[i])
+	}
+}

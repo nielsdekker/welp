@@ -8,18 +8,20 @@ import (
 	"slices"
 
 	"github.com/nielsdekker/welp/internal/cli"
-	"github.com/nielsdekker/welp/internal/modules"
-	"github.com/nielsdekker/welp/internal/output"
+	"github.com/nielsdekker/welp/internal/modules/output"
+	"github.com/nielsdekker/welp/internal/modules/postprocess"
+	"github.com/nielsdekker/welp/internal/modules/requestfilters"
+	"github.com/nielsdekker/welp/internal/modules/resultfilters"
 	"github.com/nielsdekker/welp/internal/requests"
 	"github.com/nielsdekker/welp/internal/welp"
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	opt, err := cli.Parse()
+	ctx := context.Background()
+	opt, err := cli.Parse(os.Args[1:])
 
 	if opt.ShowHelp {
-		fmt.Println(opt.Usage())
+		fmt.Println(cli.Usage())
 		os.Exit(0)
 	}
 
@@ -32,44 +34,26 @@ func main() {
 
 	requestPool := requests.NewPool(opt.ConcurrentRequests, opt.SSLIgnore)
 	w := welp.New(
-		requestPool,
 		opt,
+		requestPool,
+		[]welp.ResultFilterModule{
+			resultfilters.NewContentTypeFilter(),
+			resultfilters.NewMD5Filter(),
+		},
+		[]welp.RequestFilterModule{
+			requestfilters.NewUrlLengthFilter(200),
+			requestfilters.NewDomainFilter(opt.Target),
+			requestfilters.NewVisitedFilter(),
+		},
+		[]welp.PostProcessModule{postprocess.NewRemoveDefaults()},
+		[]welp.OutputModule{output.NewTTYOutput(opt.FilterCodes, opt.FilterContentType)},
 	)
 
-	allModules := []modules.Module{}
-	for m := range opt.Modules {
-		switch m {
-		case "text":
-			allModules = append(allModules, modules.NewAllText())
-		case "token":
-			allModules = append(allModules, modules.NewToken())
-		case "entropy":
-			allModules = append(allModules, modules.NewEntropy())
-		}
-	}
-
-	out := make(chan welp.CrawlResult)
-	go func() {
-		w.StartCrawl(ctx, out)
-		close(out)
-	}()
-
-	if opt.OutputFile != "" {
-		if err := output.WriteJSON(out, allModules, opt); err != nil {
-			cancel()
-		}
-	} else {
-		output.WriteTTY(out, allModules, opt)
-	}
+	w.StartCrawl(ctx)
 }
 
 func banner(opt cli.Options) {
-	fmt.Println(` _       __________    ____ 
-| |     / / ____/ /   / __ \
-| | /| / / __/ / /   / /_/ /
-| |/ |/ / /___/ /___/ ____/ 
-|__/|__/_____/_____/_/`)
-
+	fmt.Println(cli.Banner())
 	fmt.Println("\nUsing the following options:")
 	fmt.Printf("  %-24s%s\n", "Target", opt.Target.String())
 	fmt.Printf("  %-24s%d\n", "Concurrent requests", opt.ConcurrentRequests)
@@ -86,8 +70,8 @@ func banner(opt cli.Options) {
 		fmt.Printf("  %-24s%s\n", "Additional prefixes", slices.Collect(maps.Keys(opt.Prefixes)))
 	}
 
-	if len(opt.Modules) > 0 {
-		fmt.Printf("  %-24s%s\n", "Post process modules", slices.Collect(maps.Keys(opt.Modules)))
+	if opt.SSLIgnore {
+		fmt.Printf("  %-24s%s\n", "Ignoring SSL", "Yes")
 	}
 
 	fmt.Println()
