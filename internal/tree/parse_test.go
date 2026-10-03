@@ -1,12 +1,13 @@
-package welp
+package tree_test
 
 import (
 	"testing"
 
 	"github.com/nielsdekker/welp/internal/_tests/asserts"
+	"github.com/nielsdekker/welp/internal/tree"
 )
 
-func Test_searchStrings(t *testing.T) {
+func Test_StringValues(t *testing.T) {
 	var tests = []struct {
 		name     string
 		data     string
@@ -30,7 +31,7 @@ func Test_searchStrings(t *testing.T) {
 				asSet[r] = struct{}{}
 			}
 
-			foundStrings := searchStrings([]byte(tt.data))
+			foundStrings := tree.StringValues([]byte(tt.data), "unknown")
 			asserts.KeysEq(t, asSet, foundStrings)
 		})
 	}

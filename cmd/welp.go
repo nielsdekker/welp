@@ -18,7 +18,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	opt, err := cli.Parse()
+	opt, err := cli.Parse(os.Args[1:])
 
 	if opt.ShowHelp {
 		fmt.Println(opt.Usage())
@@ -75,8 +75,8 @@ func banner(opt cli.Options) {
 		fmt.Printf("  %-24s%s\n", "Additional prefixes", slices.Collect(maps.Keys(opt.Prefixes)))
 	}
 
-	if len(opt.Modules) > 0 {
-		fmt.Printf("  %-24s%s\n", "Post process modules", slices.Collect(maps.Keys(opt.Modules)))
+	if opt.SSLIgnore {
+		fmt.Printf("  %-24s%s\n", "Ignoring SSL", "Yes")
 	}
 
 	fmt.Println()

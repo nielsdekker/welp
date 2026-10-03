@@ -48,7 +48,7 @@ func parseJS(raw []byte) map[string]struct{} {
 		for _, c := range currentMatch.Captures {
 			// This still contains the `"` or ``` values so remove those. Should
 			// be possible in the treesitter query but then template strings get
-			// multiple values/are split which is not something we want.
+			// multiple values/are split which is not something I want.
 			strValue := strings.TrimFunc(c.Node.Utf8Text(raw), func(r rune) bool {
 				return r == '\'' || r == '"' || r == '`'
 			})

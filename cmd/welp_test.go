@@ -42,11 +42,9 @@ func newWelp(target string) []welp.CrawlResult {
 	out := &mockOutput{allResults: []welp.CrawlResult{}}
 	w := welp.New(
 		cli.Options{
-			Target:        targetURL,
-			SearchDepth:   5,
-			TextMinLength: 1,
-			TextMaxLength: 128,
-			Prefixes:      map[string]struct{}{},
+			Target:      targetURL,
+			SearchDepth: 5,
+			Prefixes:    map[string]struct{}{},
 		},
 		mocks.GetPool(),
 		[]welp.ResultFilterModule{resultfilters.NewMD5Filter()},
