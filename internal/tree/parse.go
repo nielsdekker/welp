@@ -20,6 +20,8 @@ func StringValues(raw []byte, contentType string) map[string]struct{} {
 
 func parseJS(raw []byte) map[string]struct{} {
 	p := tree_sitter.NewParser()
+	defer p.Close()
+
 	lang_js := tree_sitter.NewLanguage(tree_sitter_javascript.Language())
 	p.SetLanguage(lang_js)
 
@@ -27,6 +29,7 @@ func parseJS(raw []byte) map[string]struct{} {
 	defer tree.Close()
 
 	q, err := tree_sitter.NewQuery(lang_js, `[(string) (template_string)] @str`)
+	defer q.Close()
 
 	if err != nil {
 		fmt.Printf("err: Unable to parse %v", err)

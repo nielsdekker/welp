@@ -13,4 +13,3 @@ build:
 
 test:
 	@go test ./...
-
