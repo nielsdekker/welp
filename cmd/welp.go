@@ -21,7 +21,7 @@ func main() {
 	opt, err := cli.Parse(os.Args[1:])
 
 	if opt.ShowHelp {
-		fmt.Println(opt.Usage())
+		fmt.Println(cli.Usage())
 		os.Exit(0)
 	}
 
@@ -53,12 +53,7 @@ func main() {
 }
 
 func banner(opt cli.Options) {
-	fmt.Println(` _       __________    ____ 
-| |     / / ____/ /   / __ \
-| | /| / / __/ / /   / /_/ /
-| |/ |/ / /___/ /___/ ____/ 
-|__/|__/_____/_____/_/`)
-
+	fmt.Println(cli.Banner())
 	fmt.Println("\nUsing the following options:")
 	fmt.Printf("  %-24s%s\n", "Target", opt.Target.String())
 	fmt.Printf("  %-24s%d\n", "Concurrent requests", opt.ConcurrentRequests)

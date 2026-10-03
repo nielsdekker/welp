@@ -34,7 +34,7 @@ func TestParseValidOptions(t *testing.T) {
 			}
 		})},
 		{"Threads short argument", []string{"-t100"}, genOpt(func(o *cli.Options) { o.ConcurrentRequests = 100 })},
-		{"Threads long argument", []string{"--thread", "100"}, genOpt(func(o *cli.Options) { o.ConcurrentRequests = 100 })},
+		{"Threads long argument", []string{"--threads", "100"}, genOpt(func(o *cli.Options) { o.ConcurrentRequests = 100 })},
 		{"Max-depth short argument", []string{"-d100"}, genOpt(func(o *cli.Options) { o.SearchDepth = 100 })},
 		{"Max-depth long argument", []string{"--max-depth", "100"}, genOpt(func(o *cli.Options) { o.SearchDepth = 100 })},
 		{"Insecure short argument", []string{"-k"}, genOpt(func(o *cli.Options) { o.SSLIgnore = true })},

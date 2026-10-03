@@ -9,7 +9,7 @@ import (
 const ARG_HELP = "--help"
 const ARG_URL = "--url"
 const ARG_PREFIX = "--prefix"
-const ARG_THREADS = "--thread"
+const ARG_THREADS = "--threads"
 const ARG_MAX_DEPTH = "--max-depth"
 const ARG_INSECURE = "--insecure"
 const ARG_FILTER_CODE = "--filter-code"

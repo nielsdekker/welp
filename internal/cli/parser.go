@@ -7,9 +7,6 @@ import (
 	"strings"
 )
 
-//go:embed usage.txt
-var usage string
-
 func Parse(args []string) (Options, error) {
 	// Follow the next rules:
 	// - One `-` is new arg, greedy match until we match a valid option
@@ -104,8 +101,4 @@ func Parse(args []string) (Options, error) {
 	opt.ApplyUnsetDefaults()
 
 	return *opt, errors.Join(foundErrors...)
-}
-
-func (o Options) Usage() string {
-	return usage
 }
