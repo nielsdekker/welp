@@ -12,6 +12,7 @@ type Options struct {
 	ShowHelp           bool
 	SearchDepth        int
 	SSLIgnore          bool
+	FollowRedirect     bool
 	Prefixes           map[string]struct{}
 	FilterCodes        []int
 	FilterContentType  []string

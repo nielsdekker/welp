@@ -56,11 +56,6 @@ func (w Welp) StartCrawl(ctx context.Context) {
 				p.PostProcess(&r)
 			}
 
-			// Write the result to the output
-			for _, o := range w.outputModules {
-				o.Write(r)
-			}
-
 			// Check the filter modules if we should continue with this value.
 			// This is done after writing the result so we still get the result
 			// in the output. This only prevents additional calls that could
@@ -69,6 +64,11 @@ func (w Welp) StartCrawl(ctx context.Context) {
 				return !e.ShouldCrawl(r)
 			}) {
 				continue
+			}
+
+			// Write the result to the output
+			for _, o := range w.outputModules {
+				o.Write(r)
 			}
 
 			for _, newUrl := range determineUrls(r, w.options.Prefixes) {
