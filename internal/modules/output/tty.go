@@ -21,6 +21,7 @@ const ESCAPE_GREEN = "\033[32m"
 const ESCAPE_BLUE = "\033[34m"
 const ESCAPE_YELLOW = "\033[33m"
 const ESCAPE_BOLD = "\033[1m"
+const ESCAPE_ITALIC = "\033[3m"
 
 func NewTTYOutput(
 	filterCodes []int,
@@ -54,5 +55,5 @@ func (m ttyOutput) Write(r welp.CrawlResult) {
 		fmt.Printf("[%s%3d%s]", ESCAPE_GREEN, r.StatusCode, ESCAPE_RESET)
 	}
 
-	fmt.Printf(" %s - %s\n", r.Origin, r.ContentType)
+	fmt.Printf(" %s - %s%s%s\n", r.Origin, ESCAPE_ITALIC, r.ContentType, ESCAPE_RESET)
 }
