@@ -20,22 +20,30 @@ type pool struct {
 	openRequests int
 }
 
-func NewPool(concurrentRequests int, ignoreSSL bool) Pool {
+func NewPool(concurrentRequests int, ignoreSSL bool, followRedirects bool) Pool {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: ignoreSSL,
 	}
 
-	return &pool{
-		semaphore: make(chan struct{}, concurrentRequests),
-		client: http.Client{
-			Timeout: 5 * time.Second,
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: ignoreSSL,
-				},
+	client := http.Client{
+		Timeout: 5 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: ignoreSSL,
 			},
 		},
-		poolSize: concurrentRequests,
+	}
+
+	if !followRedirects {
+		client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		}
+	}
+
+	return &pool{
+		semaphore: make(chan struct{}, concurrentRequests),
+		client:    client,
+		poolSize:  concurrentRequests,
 	}
 }
 

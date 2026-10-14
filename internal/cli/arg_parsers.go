@@ -14,6 +14,7 @@ const ARG_MAX_DEPTH = "--max-depth"
 const ARG_INSECURE = "--insecure"
 const ARG_FILTER_CODE = "--filter-code"
 const ARG_FILTER_TYPE = "--filter-type"
+const ARG_FOLLOW_REDIRECT = "--follow-redirect"
 
 // Mapping between shorthand to longhand form
 var mapping = map[string]string{
@@ -22,6 +23,7 @@ var mapping = map[string]string{
 	"-p":  ARG_PREFIX,
 	"-t":  ARG_THREADS,
 	"-d":  ARG_MAX_DEPTH,
+	"-r":  ARG_FOLLOW_REDIRECT,
 	"-k":  ARG_INSECURE,
 	"-fc": ARG_FILTER_CODE,
 	"-ft": ARG_FILTER_TYPE,
@@ -83,6 +85,14 @@ var argParsers = map[string]func(*Options, []string) error{
 		}
 
 		o.SSLIgnore = true
+		return nil
+	},
+	ARG_FOLLOW_REDIRECT: func(o *Options, s []string) error {
+		if len(s) > 0 {
+			return fmt.Errorf("No values expected for follow redirect argument")
+		}
+
+		o.FollowRedirect = true
 		return nil
 	},
 	ARG_FILTER_CODE: func(o *Options, s []string) error {

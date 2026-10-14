@@ -82,6 +82,7 @@ func Parse(args []string) (Options, error) {
 		Prefixes:           map[string]struct{}{},
 		ConcurrentRequests: 10,
 		SearchDepth:        25,
+		FollowRedirect:     false,
 	}
 
 	for k, v := range parsedArgs {

@@ -18,9 +18,8 @@ import (
 func TestSpa(t *testing.T) {
 	results := newWelp("http://spa.test/")
 
-	asserts.Eq(t, len(results), 3)
+	asserts.Eq(t, len(results), 2)
 	resultsContain(t, results, "http://spa.test/")
-	resultsContain(t, results, "http://spa.test/other")
 	resultsContain(t, results, "http://spa.test/style/default.css")
 }
 
