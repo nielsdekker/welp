@@ -5,6 +5,12 @@ Main settings:
   -u, --url
     The target URL
 
+  -k, --insecure
+    Skip SSL validation
+
+  -r, --follow-redirects
+    Follow redirects
+
 Crawl settings:
   -p, --prefix
     Also checks the string value with the given prefix. Multiple values are
