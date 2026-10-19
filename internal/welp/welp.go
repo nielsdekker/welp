@@ -142,7 +142,8 @@ func (w Welp) worker(
 			}
 			result.Depth = nextItem.depth + 1
 
-			// Handle any post processing in the goroutine. These
+			// Handle any post processing in the goroutine, these should be
+			// thread safe
 			for _, p := range w.postProcessModules {
 				p.PostProcess(&result)
 			}

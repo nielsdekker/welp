@@ -278,32 +278,3 @@ var htmlValues = map[string]struct{}{
 	"username":                        struct{}{},
 	"utf-8":                           struct{}{},
 }
-
-var defaultStringValues = map[string]struct{}{
-
-	// javascript
-
-	// attr
-	"checkbox":       struct{}{},
-	"color":          struct{}{},
-	"date":           struct{}{},
-	"datetime-local": struct{}{},
-	"decimal":        struct{}{},
-	"document":       struct{}{},
-	"fetch":          struct{}{},
-	"file":           struct{}{},
-	"font":           struct{}{},
-	"image":          struct{}{},
-	"number":         struct{}{},
-	"numeric":        struct{}{},
-	"password":       struct{}{},
-	"radio":          struct{}{},
-	"range":          struct{}{},
-	"reset":          struct{}{},
-	"script":         struct{}{},
-	"search":         struct{}{},
-	"style":          struct{}{},
-	"tel":            struct{}{},
-	"time":           struct{}{},
-	"url":            struct{}{},
-}
