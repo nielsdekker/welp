@@ -24,7 +24,7 @@ type mockPool struct {
 	hosts map[string]*http.ServeMux
 }
 
-func GetPool() requests.Pool {
+func GetClient() http.Client {
 	if _pool == nil {
 		p := mockPool{
 			hosts: make(map[string]*http.ServeMux),

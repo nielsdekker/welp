@@ -45,7 +45,7 @@ func newWelp(target string) []welp.CrawlResult {
 			SearchDepth: 5,
 			Prefixes:    map[string]struct{}{},
 		},
-		mocks.GetPool(),
+		mocks.GetClient(),
 		[]welp.ResultFilterModule{resultfilters.NewMD5Filter()},
 		[]welp.RequestFilterModule{
 			requestfilters.NewDomainFilter(targetURL),
