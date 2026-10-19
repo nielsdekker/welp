@@ -21,8 +21,8 @@ func New[P any]() *Queue[P] {
 	}
 }
 
-// Removes and returns the front of the queue, if the queue is empty nil is
-// returned
+// Locks the queue and returns the front of the queue. The front of the queue is
+// updated to the next value, if the queue is empty nil is returned.
 func (q *Queue[P]) Pop() (*P, bool) {
 	var v *P = nil
 	ok := false
@@ -31,7 +31,7 @@ func (q *Queue[P]) Pop() (*P, bool) {
 	if q.front != nil {
 		v = &q.front.val
 
-		// Only one item so make sure the back field is cleared
+		// Only one item so make sure the back field is also cleared
 		if q.front == q.back {
 			q.back = nil
 		}
@@ -44,6 +44,7 @@ func (q *Queue[P]) Pop() (*P, bool) {
 	return v, ok
 }
 
+// Locks the queue and adds the passed item
 func (q *Queue[P]) Push(item P) {
 	i := &queueItem[P]{
 		val:  item,
@@ -58,34 +59,5 @@ func (q *Queue[P]) Push(item P) {
 		q.back.next = i
 	}
 	q.back = i
-	q.mutex.Unlock()
-}
-
-func (q *Queue[P]) PushMultiple(items []P) {
-	if len(items) == 0 {
-		return
-	}
-
-	c := &queueItem[P]{
-		val:  items[0],
-		next: nil,
-	}
-	q.mutex.Lock()
-
-	if q.back == nil {
-		q.front = c
-	} else {
-		q.back.next = c
-	}
-
-	for _, i := range items[1:] {
-		c.next = &queueItem[P]{
-			val:  i,
-			next: nil,
-		}
-		c = c.next
-	}
-
-	q.back = c
 	q.mutex.Unlock()
 }
