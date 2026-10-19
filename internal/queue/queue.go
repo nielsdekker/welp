@@ -23,9 +23,8 @@ func New[P any]() *Queue[P] {
 
 // Locks the queue and returns the front of the queue. The front of the queue is
 // updated to the next value, if the queue is empty nil is returned.
-func (q *Queue[P]) Pop() (*P, bool) {
+func (q *Queue[P]) Pop() *P {
 	var v *P = nil
-	ok := false
 
 	q.mutex.Lock()
 	if q.front != nil {
@@ -37,11 +36,10 @@ func (q *Queue[P]) Pop() (*P, bool) {
 		}
 
 		q.front = q.front.next
-		ok = true
 	}
 	q.mutex.Unlock()
 
-	return v, ok
+	return v
 }
 
 // Locks the queue and adds the passed item

@@ -55,7 +55,7 @@ func (w Welp) StartCrawl(ctx context.Context) {
 	wg := sync.WaitGroup{}
 
 	for range w.options.ConcurrentRequests {
-		wg.Go(welpWorker(cancelCtx, q, w.requestPool, resultChannel, w.postProcessModules))
+		wg.Go(w.worker(cancelCtx, q, resultChannel))
 	}
 
 	q.Push(queueItem{
@@ -71,10 +71,8 @@ func (w Welp) StartCrawl(ctx context.Context) {
 		case r := <-resultChannel:
 			counter--
 
-			// Check the filter modules if we should continue with this value.
-			// This is done after writing the result so we still get the result
-			// in the output. This only prevents additional calls that could
-			// have originated from this result object.
+			// Before writing the output check if we should actually use this
+			// result.
 			if slices.ContainsFunc(w.resultFilterModules, func(e ResultFilterModule) bool {
 				return !e.ShouldCrawl(r)
 			}) {
@@ -84,6 +82,13 @@ func (w Welp) StartCrawl(ctx context.Context) {
 			// Write the result to the output
 			for _, o := range w.outputModules {
 				o.Write(r)
+			}
+
+			// Search depth is a bit in limbo between the filters. We still want
+			// the output from the `outputModules` but don't want to continue,
+			// therefore it is it's own check.
+			if r.Depth >= w.options.SearchDepth {
+				continue
 			}
 
 			for _, newUrl := range determineUrls(r, w.options.Prefixes) {
@@ -96,7 +101,7 @@ func (w Welp) StartCrawl(ctx context.Context) {
 				counter++
 				q.Push(queueItem{
 					target: newUrl.String(),
-					depth:  0,
+					depth:  r.Depth + 1,
 				})
 			}
 		}
@@ -106,14 +111,12 @@ func (w Welp) StartCrawl(ctx context.Context) {
 	wg.Wait()
 }
 
-func welpWorker(
+func (w Welp) worker(
 	ctx context.Context,
 	q *queue.Queue[queueItem],
-	requestPool http.Client,
 	resultChannel chan CrawlResult,
-	postProcessModules []PostProcessModule,
 ) func() {
-	jitter := time.Duration(rand.Int() % 500)
+	jitter := time.Duration((rand.Int() % 200) + 50)
 
 	return func() {
 		for {
@@ -124,24 +127,23 @@ func welpWorker(
 				// No op
 			}
 
-			nextItem, ok := q.Pop()
-
-			if !ok {
+			nextItem := q.Pop()
+			if nextItem == nil {
 				// This can happen if the queue is empty but we are not done
 				// yet, so the main thread is processing some items. In that
-				// case don't yeet the CPU to 100% checking the queue.
+				// case don't spike the CPU to 100% just checking the queue.
 				time.Sleep(jitter * time.Millisecond)
 				continue
 			}
 
-			result, err := crawl(ctx, nextItem.target, requestPool)
+			result, err := crawl(ctx, nextItem.target, w.requestPool)
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 			}
 			result.Depth = nextItem.depth + 1
 
-			// Handle any post processing
-			for _, p := range postProcessModules {
+			// Handle any post processing in the goroutine. These
+			for _, p := range w.postProcessModules {
 				p.PostProcess(&result)
 			}
 			resultChannel <- result
