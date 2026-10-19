@@ -7,7 +7,6 @@ import (
 	"mime"
 	"net/http"
 
-	"github.com/nielsdekker/welp/internal/requests"
 	"github.com/nielsdekker/welp/internal/tree"
 )
 
@@ -25,7 +24,7 @@ type CrawlResult struct {
 func crawl(
 	ctx context.Context,
 	target string,
-	pool requests.Pool,
+	client http.Client,
 ) (CrawlResult, error) {
 	result := CrawlResult{
 		Origin:       target,
@@ -38,7 +37,7 @@ func crawl(
 		return result, fmt.Errorf("Unable to create request: %w", err)
 	}
 
-	response, err := pool.Do(ctx, req)
+	response, err := client.Do(req)
 	if err != nil {
 		return result, fmt.Errorf("Request failed: %w", err)
 	}

@@ -3,15 +3,19 @@ package welp
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
+	"net/http"
 	"slices"
+	"sync"
+	"time"
 
 	"github.com/nielsdekker/welp/internal/cli"
-	"github.com/nielsdekker/welp/internal/requests"
+	"github.com/nielsdekker/welp/internal/queue"
 )
 
 type Welp struct {
 	options              cli.Options
-	requestPool          requests.Pool
+	requestPool          http.Client
 	resultFilterModules  []ResultFilterModule
 	requestFilterModules []RequestFilterModule
 	postProcessModules   []PostProcessModule
@@ -20,7 +24,7 @@ type Welp struct {
 
 func New(
 	options cli.Options,
-	requestPool requests.Pool,
+	requestPool http.Client,
 	resultFilterModules []ResultFilterModule,
 	requestFilterModules []RequestFilterModule,
 	postProcessModules []PostProcessModule,
@@ -36,14 +40,30 @@ func New(
 	}
 }
 
+type queueItem struct {
+	target string
+	depth  int
+}
+
 func (w Welp) StartCrawl(ctx context.Context) {
 	resultChannel := make(chan CrawlResult)
 	defer close(resultChannel)
 
-	go w.crawlWrapper(ctx, w.options.Target.String(), 0, resultChannel)
+	cancelCtx, cancel := context.WithCancel(ctx)
+
+	q := queue.New[queueItem]()
+	wg := sync.WaitGroup{}
+
+	for range w.options.NumWorkers {
+		wg.Go(w.worker(cancelCtx, q, resultChannel))
+	}
+
+	q.Push(queueItem{
+		target: w.options.Target.String(),
+		depth:  0,
+	})
 
 	counter := 1
-
 	for counter > 0 {
 		select {
 		case <-ctx.Done():
@@ -51,15 +71,8 @@ func (w Welp) StartCrawl(ctx context.Context) {
 		case r := <-resultChannel:
 			counter--
 
-			// Handle any post processing
-			for _, p := range w.postProcessModules {
-				p.PostProcess(&r)
-			}
-
-			// Check the filter modules if we should continue with this value.
-			// This is done after writing the result so we still get the result
-			// in the output. This only prevents additional calls that could
-			// have originated from this result object.
+			// Before writing the output check if we should actually use this
+			// result.
 			if slices.ContainsFunc(w.resultFilterModules, func(e ResultFilterModule) bool {
 				return !e.ShouldCrawl(r)
 			}) {
@@ -71,6 +84,13 @@ func (w Welp) StartCrawl(ctx context.Context) {
 				o.Write(r)
 			}
 
+			// Search depth is a bit in limbo between the filters. We still want
+			// the output from the `outputModules` but don't want to continue,
+			// therefore it is it's own check.
+			if r.Depth >= w.options.SearchDepth {
+				continue
+			}
+
 			for _, newUrl := range determineUrls(r, w.options.Prefixes) {
 				if slices.ContainsFunc(w.requestFilterModules, func(e RequestFilterModule) bool {
 					return !e.ShouldRequest(newUrl)
@@ -79,17 +99,55 @@ func (w Welp) StartCrawl(ctx context.Context) {
 				}
 
 				counter++
-				go w.crawlWrapper(ctx, newUrl.String(), r.Depth, resultChannel)
+				q.Push(queueItem{
+					target: newUrl.String(),
+					depth:  r.Depth + 1,
+				})
 			}
 		}
 	}
+
+	cancel()
+	wg.Wait()
 }
 
-func (w Welp) crawlWrapper(ctx context.Context, target string, currentDepth int, resultChannel chan CrawlResult) {
-	res, err := crawl(ctx, target, w.requestPool)
-	if err != nil {
-		fmt.Printf("err: %v\n", err)
+func (w Welp) worker(
+	ctx context.Context,
+	q *queue.Queue[queueItem],
+	resultChannel chan CrawlResult,
+) func() {
+	jitter := time.Duration((rand.Int() % 200) + 50)
+
+	return func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// No op
+			}
+
+			nextItem := q.Pop()
+			if nextItem == nil {
+				// This can happen if the queue is empty but we are not done
+				// yet, so the main thread is processing some items. In that
+				// case don't spike the CPU to 100% just checking the queue.
+				time.Sleep(jitter * time.Millisecond)
+				continue
+			}
+
+			result, err := crawl(ctx, nextItem.target, w.requestPool)
+			if err != nil {
+				fmt.Printf("err: %v\n", err)
+			}
+			result.Depth = nextItem.depth + 1
+
+			// Handle any post processing in the goroutine, these should be
+			// thread safe
+			for _, p := range w.postProcessModules {
+				p.PostProcess(&result)
+			}
+			resultChannel <- result
+		}
 	}
-	res.Depth = currentDepth + 1
-	resultChannel <- res
 }

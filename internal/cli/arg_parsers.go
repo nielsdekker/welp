@@ -62,7 +62,7 @@ var argParsers = map[string]func(*Options, []string) error{
 		if err != nil {
 			return err
 		} else {
-			o.ConcurrentRequests = i[0]
+			o.NumWorkers = i[0]
 			return nil
 		}
 	},

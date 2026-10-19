@@ -65,24 +65,29 @@ func parseJS(raw []byte) map[string]struct{} {
 func parseUnknown(raw []byte) map[string]struct{} {
 	result := make(map[string]struct{})
 
-	quoteIndices := map[byte]int{
-		'\'': -1,
-		'"':  -1,
-		'`':  -1,
-	}
+	quoteIndices := []int{-1, -1, -1}
 
 	for rawIndex, b := range raw {
-		if quoteIndex, ok := quoteIndices[b]; ok {
-			// This is a quote/string character so parse it
-			if quoteIndex >= 0 {
-				bytes := raw[quoteIndex+1 : rawIndex]
+		qi := -1
+		switch b {
+		case '\'':
+			qi = 0
+		case '"':
+			qi = 1
+		case '`':
+			qi = 2
+		}
+
+		if qi >= 0 {
+			if quoteIndices[qi] >= 0 {
+				bytes := raw[quoteIndices[qi]+1 : rawIndex]
 				if utf8.Valid(bytes) {
 					foundValue := strings.TrimSpace(string(bytes))
 					result[foundValue] = struct{}{}
 				}
-				quoteIndices[b] = -1
+				quoteIndices[qi] = -1
 			} else {
-				quoteIndices[b] = rawIndex
+				quoteIndices[qi] = rawIndex
 			}
 		}
 	}

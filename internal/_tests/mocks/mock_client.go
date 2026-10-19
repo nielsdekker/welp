@@ -1,7 +1,6 @@
 package mocks
 
 import (
-	"context"
 	"embed"
 	"fmt"
 	"io"
@@ -10,54 +9,52 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
-
-	"github.com/nielsdekker/welp/internal/requests"
+	"time"
 )
 
 //go:embed resources
 var resources embed.FS
-var _pool *mockPool
+var HttpClient http.Client = createClient()
 
-type mockPool struct {
+type mockTransport struct {
 	// Each mock resource will be mapped to it's own hostname. For example the
 	// `/spa` folder will map to the `spa.test` hostname
 	hosts map[string]*http.ServeMux
 }
 
-func GetPool() requests.Pool {
-	if _pool == nil {
-		p := mockPool{
-			hosts: make(map[string]*http.ServeMux),
+func createClient() http.Client {
+	transport := &mockTransport{
+		hosts: make(map[string]*http.ServeMux),
+	}
+	entries, err := fs.ReadDir(resources, "resources")
+	if err != nil {
+		fmt.Printf("Setting up the mocks failed: %v", err)
+		os.Exit(1)
+	}
+
+	// Create a mux per directory in the mock resources
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
 		}
-		entries, err := fs.ReadDir(resources, "resources")
+
+		name := entry.Name()
+		sub, err := fs.Sub(resources, path.Join("resources", name))
 		if err != nil {
-			fmt.Printf("Setting up the mocks failed: %v", err)
+			fmt.Printf("Unable to create sub filesystem for %s: %v\n", name, err)
 			os.Exit(1)
 		}
 
-		// Create a mux per directory in the mock resources
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				continue
-			}
-
-			name := entry.Name()
-			sub, err := fs.Sub(resources, path.Join("resources", name))
-			if err != nil {
-				fmt.Printf("Unable to create sub filesystem for %s: %v\n", name, err)
-				os.Exit(1)
-			}
-
-			p.hosts[name+".test"] = toMux(name, sub)
-		}
-
-		_pool = &p
+		transport.hosts[name+".test"] = toMux(name, sub)
 	}
 
-	return _pool
+	return http.Client{
+		Timeout:   100 * time.Millisecond,
+		Transport: transport,
+	}
 }
 
-func (p *mockPool) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
+func (p *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	mux, ok := p.hosts[req.Host]
 	if !ok {
 		return nil, fmt.Errorf("No mock found for hostname: %s", req.Host)

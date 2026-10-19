@@ -7,15 +7,15 @@ import (
 )
 
 type Options struct {
-	Target             *url.URL
-	ConcurrentRequests int
-	ShowHelp           bool
-	SearchDepth        int
-	SSLIgnore          bool
-	FollowRedirect     bool
-	Prefixes           map[string]struct{}
-	FilterCodes        []int
-	FilterContentType  []string
+	Target            *url.URL
+	NumWorkers        int
+	ShowHelp          bool
+	SearchDepth       int
+	SSLIgnore         bool
+	FollowRedirect    bool
+	Prefixes          map[string]struct{}
+	FilterCodes       []int
+	FilterContentType []string
 }
 
 func (o *Options) IsValid() []error {
@@ -26,8 +26,8 @@ func (o *Options) IsValid() []error {
 	if o.Target != nil && !strings.HasPrefix(o.Target.Scheme, "http") {
 		foundErrors = append(foundErrors, fmt.Errorf("%s:// is not a valid scheme", o.Target.Scheme))
 	}
-	if o.ConcurrentRequests <= 0 {
-		foundErrors = append(foundErrors, fmt.Errorf("Threads can not be zero or smaller, is %d", o.ConcurrentRequests))
+	if o.NumWorkers <= 0 {
+		foundErrors = append(foundErrors, fmt.Errorf("Threads can not be zero or smaller, is %d", o.NumWorkers))
 	}
 	if o.SearchDepth < 0 {
 		foundErrors = append(foundErrors, fmt.Errorf("Search depth can not be smaller then zero, is %d", o.SearchDepth))
