@@ -54,7 +54,7 @@ func (w Welp) StartCrawl(ctx context.Context) {
 	q := queue.New[queueItem]()
 	wg := sync.WaitGroup{}
 
-	for range w.options.ConcurrentRequests {
+	for range w.options.NumWorkers {
 		wg.Go(w.worker(cancelCtx, q, resultChannel))
 	}
 

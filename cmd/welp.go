@@ -56,7 +56,7 @@ func banner(opt cli.Options) {
 	fmt.Println(cli.Banner())
 	fmt.Println("\nUsing the following options:")
 	fmt.Printf("  %-24s%s\n", "Target", opt.Target.String())
-	fmt.Printf("  %-24s%d\n", "Concurrent requests", opt.ConcurrentRequests)
+	fmt.Printf("  %-24s%d\n", "Workers", opt.NumWorkers)
 	fmt.Printf("  %-24s%d\n", "Max search depth", opt.SearchDepth)
 
 	if len(opt.FilterContentType) > 0 {

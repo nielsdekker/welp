@@ -33,8 +33,8 @@ func TestParseValidOptions(t *testing.T) {
 				"world": struct{}{},
 			}
 		})},
-		{"Threads short argument", []string{"-t100"}, genOpt(func(o *cli.Options) { o.ConcurrentRequests = 100 })},
-		{"Threads long argument", []string{"--threads", "100"}, genOpt(func(o *cli.Options) { o.ConcurrentRequests = 100 })},
+		{"Threads short argument", []string{"-t100"}, genOpt(func(o *cli.Options) { o.NumWorkers = 100 })},
+		{"Threads long argument", []string{"--threads", "100"}, genOpt(func(o *cli.Options) { o.NumWorkers = 100 })},
 		{"Max-depth short argument", []string{"-d100"}, genOpt(func(o *cli.Options) { o.SearchDepth = 100 })},
 		{"Max-depth long argument", []string{"--max-depth", "100"}, genOpt(func(o *cli.Options) { o.SearchDepth = 100 })},
 		{"Insecure short argument", []string{"-k"}, genOpt(func(o *cli.Options) { o.SSLIgnore = true })},
@@ -61,10 +61,10 @@ func TestParseValidOptions(t *testing.T) {
 func genOpt(overrides func(*cli.Options)) cli.Options {
 	opt := &cli.Options{
 		// Defaults
-		SSLIgnore:          false,
-		Prefixes:           map[string]struct{}{},
-		ConcurrentRequests: 10,
-		SearchDepth:        25,
+		SSLIgnore:   false,
+		Prefixes:    map[string]struct{}{},
+		NumWorkers:  10,
+		SearchDepth: 25,
 	}
 
 	overrides(opt)
@@ -83,7 +83,7 @@ func compOpt(t *testing.T, expected cli.Options, actual cli.Options) {
 		}
 	}
 	asserts.KeysEq(t, expected.Prefixes, actual.Prefixes)
-	asserts.Eq(t, expected.ConcurrentRequests, actual.ConcurrentRequests)
+	asserts.Eq(t, expected.NumWorkers, actual.NumWorkers)
 	asserts.Eq(t, expected.SearchDepth, actual.SearchDepth)
 	asserts.Eq(t, expected.SSLIgnore, actual.SSLIgnore)
 	asserts.SliceEq(t, expected.FilterCodes, actual.FilterCodes)
