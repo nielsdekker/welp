@@ -3,14 +3,14 @@ package requestfilters
 import (
 	"net/url"
 
-	"github.com/nielsdekker/welp/internal/welp"
+	"github.com/nielsdekker/welp/internal/modules"
 )
 
 type urlLengthFilter struct {
 	maxLength int
 }
 
-var _ welp.RequestFilterModule = urlLengthFilter{}
+var _ modules.RequestFilterModule = urlLengthFilter{}
 
 func NewUrlLengthFilter(maxLength int) urlLengthFilter {
 	return urlLengthFilter{

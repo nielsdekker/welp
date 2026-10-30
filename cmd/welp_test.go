@@ -9,6 +9,7 @@ import (
 	"github.com/nielsdekker/welp/internal/_tests/asserts"
 	"github.com/nielsdekker/welp/internal/_tests/mocks"
 	"github.com/nielsdekker/welp/internal/cli"
+	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/modules/postprocess"
 	"github.com/nielsdekker/welp/internal/modules/requestfilters"
 	"github.com/nielsdekker/welp/internal/modules/resultfilters"
@@ -26,19 +27,31 @@ func TestSpa(t *testing.T) {
 func TestSubdomain(t *testing.T) {
 	results := newWelp("http://sub.test/")
 
-	asserts.Eq(t, len(results), 3)
+	asserts.Eq(t, len(results), 2)
 	resultsContain(t, results, "http://sub.test/")
 	resultsContain(t, results, "http://sub.sub.test/")
-	resultsContain(t, results, "http://sub.sub.test/secret")
 }
 
-func newWelp(target string) []welp.CrawlResult {
+func TestTokens(t *testing.T) {
+	results := newWelp("http://token.test/")
+	asserts.Eq(t, len(results), 3)
+
+	resultsContain(t, results, "http://token.test/")
+	resultsContain(t, results, "http://token.test/scripts/main.js")
+	resultsContain(t, results, "http://token.test/scripts/tokens.js")
+
+	resultsPostModuleContains(t, results, "http://token.test/scripts/tokens.js", "token github", "ghp_123abc")
+	resultsPostModuleContains(t, results, "http://token.test/scripts/tokens.js", "token openAI", "sk-123-456")
+	resultsPostModuleContains(t, results, "http://token.test/scripts/tokens.js", "token jwt", "ey123.eyabc.def")
+}
+
+func newWelp(target string) []modules.Result {
 	targetURL, err := url.Parse(target)
 	if err != nil {
 		panic(err)
 	}
 
-	out := &mockOutput{allResults: []welp.CrawlResult{}}
+	out := &mockOutput{allResults: []modules.Result{}}
 	w := welp.New(
 		cli.Options{
 			Target:      targetURL,
@@ -47,13 +60,20 @@ func newWelp(target string) []welp.CrawlResult {
 			NumWorkers:  3,
 		},
 		mocks.HttpClient,
-		[]welp.ResultFilterModule{resultfilters.NewMD5Filter()},
-		[]welp.RequestFilterModule{
+		[]modules.ResultFilterModule{
+			resultfilters.NewMD5Filter(),
+			resultfilters.NewStatusCodeFilter([]int{404}),
+			resultfilters.NewContentTypeFilter([]string{}),
+		},
+		[]modules.RequestFilterModule{
 			requestfilters.NewDomainFilter(targetURL),
 			requestfilters.NewVisitedFilter(),
 		},
-		[]welp.PostProcessModule{postprocess.NewRemoveDefaults()},
-		[]welp.OutputModule{out},
+		[]modules.PostProcessModule{
+			postprocess.NewRemoveDefaults(),
+			postprocess.NewFindTokens(),
+		},
+		[]modules.OutputModule{out},
 	)
 
 	w.StartCrawl(context.Background())
@@ -61,18 +81,32 @@ func newWelp(target string) []welp.CrawlResult {
 	return out.allResults
 }
 
-func resultsContain(t *testing.T, results []welp.CrawlResult, path string) {
-	if !slices.ContainsFunc(results, func(res welp.CrawlResult) bool {
+func resultsContain(t *testing.T, results []modules.Result, path string) {
+	if !slices.ContainsFunc(results, func(res modules.Result) bool {
 		return res.Origin == path || res.Origin+"/" == path
 	}) {
 		t.Errorf("Expected \"%s\" to be in the crawl results", path)
 	}
 }
 
-type mockOutput struct {
-	allResults []welp.CrawlResult
+func resultsPostModuleContains(t *testing.T, results []modules.Result, path string, ppName string, ppValue string) {
+	for _, res := range results {
+		if res.Origin == path || res.Origin+"/" == path {
+			if !slices.ContainsFunc(res.PostProcessOutput, func(pp modules.PostProcessOutput) bool {
+				return pp.Name == ppName && pp.Value == ppValue
+			}) {
+				t.Errorf("Expected to find post proces result \"%s:%s\" for path \"%s\"", ppName, ppValue, path)
+			}
+			return
+		}
+	}
+	t.Errorf("Expected \"%s\" to be in the crawl results", path)
 }
 
-func (m *mockOutput) Write(result welp.CrawlResult) {
+type mockOutput struct {
+	allResults []modules.Result
+}
+
+func (m *mockOutput) Write(result modules.Result) {
 	m.allResults = append(m.allResults, result)
 }

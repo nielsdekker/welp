@@ -10,25 +10,26 @@ import (
 	"time"
 
 	"github.com/nielsdekker/welp/internal/cli"
+	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/queue"
 )
 
 type Welp struct {
 	options              cli.Options
 	requestPool          http.Client
-	resultFilterModules  []ResultFilterModule
-	requestFilterModules []RequestFilterModule
-	postProcessModules   []PostProcessModule
-	outputModules        []OutputModule
+	resultFilterModules  []modules.ResultFilterModule
+	requestFilterModules []modules.RequestFilterModule
+	postProcessModules   []modules.PostProcessModule
+	outputModules        []modules.OutputModule
 }
 
 func New(
 	options cli.Options,
 	requestPool http.Client,
-	resultFilterModules []ResultFilterModule,
-	requestFilterModules []RequestFilterModule,
-	postProcessModules []PostProcessModule,
-	outputModules []OutputModule,
+	resultFilterModules []modules.ResultFilterModule,
+	requestFilterModules []modules.RequestFilterModule,
+	postProcessModules []modules.PostProcessModule,
+	outputModules []modules.OutputModule,
 ) Welp {
 	return Welp{
 		options:              options,
@@ -46,7 +47,7 @@ type queueItem struct {
 }
 
 func (w Welp) StartCrawl(ctx context.Context) {
-	resultChannel := make(chan CrawlResult)
+	resultChannel := make(chan modules.Result)
 	defer close(resultChannel)
 
 	cancelCtx, cancel := context.WithCancel(ctx)
@@ -73,7 +74,7 @@ func (w Welp) StartCrawl(ctx context.Context) {
 
 			// Before writing the output check if we should actually use this
 			// result.
-			if slices.ContainsFunc(w.resultFilterModules, func(e ResultFilterModule) bool {
+			if slices.ContainsFunc(w.resultFilterModules, func(e modules.ResultFilterModule) bool {
 				return !e.ShouldCrawl(r)
 			}) {
 				continue
@@ -92,7 +93,7 @@ func (w Welp) StartCrawl(ctx context.Context) {
 			}
 
 			for _, newUrl := range determineUrls(r, w.options.Prefixes) {
-				if slices.ContainsFunc(w.requestFilterModules, func(e RequestFilterModule) bool {
+				if slices.ContainsFunc(w.requestFilterModules, func(e modules.RequestFilterModule) bool {
 					return !e.ShouldRequest(newUrl)
 				}) {
 					continue
@@ -114,7 +115,7 @@ func (w Welp) StartCrawl(ctx context.Context) {
 func (w Welp) worker(
 	ctx context.Context,
 	q *queue.Queue[queueItem],
-	resultChannel chan CrawlResult,
+	resultChannel chan modules.Result,
 ) func() {
 	jitter := time.Duration((rand.Int() % 200) + 50)
 

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/nielsdekker/welp/internal/modules"
 )
 
 type Options struct {
@@ -16,6 +18,7 @@ type Options struct {
 	Prefixes          map[string]struct{}
 	FilterCodes       []int
 	FilterContentType []string
+	Scripts           []modules.PostProcessModule
 }
 
 func (o *Options) IsValid() []error {
@@ -40,5 +43,15 @@ func (o *Options) IsValid() []error {
 func (o *Options) ApplyUnsetDefaults() {
 	if len(o.FilterCodes) == 0 {
 		o.FilterCodes = []int{404}
+	}
+
+	if len(o.FilterContentType) == 0 {
+		o.FilterContentType = []string{
+			"application/zip",
+			"audio/",
+			"font/",
+			"image/",
+			"video/",
+		}
 	}
 }

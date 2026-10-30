@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+
+	"github.com/nielsdekker/welp/internal/modules/postprocess"
 )
 
 const ARG_HELP = "--help"
@@ -15,6 +17,7 @@ const ARG_INSECURE = "--insecure"
 const ARG_FILTER_CODE = "--filter-code"
 const ARG_FILTER_TYPE = "--filter-type"
 const ARG_FOLLOW_REDIRECT = "--follow-redirect"
+const ARG_SCRIPTS = "--scripts"
 
 // Mapping between shorthand to longhand form
 var mapping = map[string]string{
@@ -27,6 +30,7 @@ var mapping = map[string]string{
 	"-k":  ARG_INSECURE,
 	"-fc": ARG_FILTER_CODE,
 	"-ft": ARG_FILTER_TYPE,
+	"-sc": ARG_SCRIPTS,
 }
 
 var argParsers = map[string]func(*Options, []string) error{
@@ -110,6 +114,22 @@ var argParsers = map[string]func(*Options, []string) error{
 		}
 
 		o.FilterContentType = s
+		return nil
+	},
+	ARG_SCRIPTS: func(o *Options, s []string) error {
+		if len(s) == 0 {
+			return fmt.Errorf("Expected one or more values for the scripts argument")
+		}
+
+		for _, script := range s {
+			switch script {
+			case "token":
+				o.Scripts = append(o.Scripts, postprocess.NewFindTokens())
+			default:
+				return fmt.Errorf("Unknown script value passed: %s", script)
+			}
+		}
+
 		return nil
 	},
 }
