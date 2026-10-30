@@ -3,11 +3,13 @@ package welp
 import (
 	"net/url"
 	"strings"
+
+	"github.com/nielsdekker/welp/internal/modules"
 )
 
 // Determines follow urls based on the result
 func determineUrls(
-	result CrawlResult,
+	result modules.Result,
 	prefixes map[string]struct{},
 ) []*url.URL {
 	urls := []*url.URL{}

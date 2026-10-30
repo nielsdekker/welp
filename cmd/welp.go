@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	"github.com/nielsdekker/welp/internal/cli"
+	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/modules/output"
 	"github.com/nielsdekker/welp/internal/modules/postprocess"
 	"github.com/nielsdekker/welp/internal/modules/requestfilters"
@@ -36,17 +37,18 @@ func main() {
 	w := welp.New(
 		opt,
 		requestPool,
-		[]welp.ResultFilterModule{
-			resultfilters.NewContentTypeFilter(),
+		[]modules.ResultFilterModule{
+			resultfilters.NewStatusCodeFilter(opt.FilterCodes),
+			resultfilters.NewContentTypeFilter(opt.FilterContentType),
 			resultfilters.NewMD5Filter(),
 		},
-		[]welp.RequestFilterModule{
+		[]modules.RequestFilterModule{
 			requestfilters.NewUrlLengthFilter(200),
 			requestfilters.NewDomainFilter(opt.Target),
 			requestfilters.NewVisitedFilter(),
 		},
-		[]welp.PostProcessModule{postprocess.NewRemoveDefaults()},
-		[]welp.OutputModule{output.NewTTYOutput(opt.FilterCodes, opt.FilterContentType)},
+		append(opt.Scripts, postprocess.NewRemoveDefaults()),
+		[]modules.OutputModule{output.NewTTYOutput()},
 	)
 
 	w.StartCrawl(ctx)

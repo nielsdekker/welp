@@ -1,18 +1,16 @@
 package postprocess
 
-import (
-	"github.com/nielsdekker/welp/internal/welp"
-)
+import "github.com/nielsdekker/welp/internal/modules"
 
 type removeDefaults struct{}
 
-var _ welp.PostProcessModule = removeDefaults{}
+var _ modules.PostProcessModule = removeDefaults{}
 
 func NewRemoveDefaults() removeDefaults {
 	return removeDefaults{}
 }
 
-func (m removeDefaults) PostProcess(result *welp.CrawlResult) {
+func (m removeDefaults) PostProcess(result *modules.Result) {
 	deleteInstances(result, defaultValues)
 
 	switch result.ContentType {
@@ -25,7 +23,7 @@ func (m removeDefaults) PostProcess(result *welp.CrawlResult) {
 	}
 }
 
-func deleteInstances(result *welp.CrawlResult, values map[string]struct{}) {
+func deleteInstances(result *modules.Result, values map[string]struct{}) {
 	for k := range result.FoundStrings {
 		if _, ok := values[k]; ok {
 			delete(result.FoundStrings, k)

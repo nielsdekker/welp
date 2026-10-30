@@ -7,26 +7,18 @@ import (
 	"mime"
 	"net/http"
 
+	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/tree"
 )
 
 const MB = int64(1024 * 1024)
 
-type CrawlResult struct {
-	Origin       string
-	StatusCode   int
-	ContentType  string
-	FoundStrings map[string]struct{}
-	Depth        int
-	Raw          []byte
-}
-
 func crawl(
 	ctx context.Context,
 	target string,
 	client http.Client,
-) (CrawlResult, error) {
-	result := CrawlResult{
+) (modules.Result, error) {
+	result := modules.Result{
 		Origin:       target,
 		FoundStrings: make(map[string]struct{}),
 		StatusCode:   0,

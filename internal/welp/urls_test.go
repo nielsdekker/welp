@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/nielsdekker/welp/internal/_tests/asserts"
+	"github.com/nielsdekker/welp/internal/modules"
 )
 
 func Test_determineUrls(t *testing.T) {
@@ -55,7 +56,7 @@ func Test_determineUrls(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			actualRaw := determineUrls(CrawlResult{
+			actualRaw := determineUrls(modules.Result{
 				Origin:       tt.origin,
 				FoundStrings: toSet(tt.foundString),
 			}, tt.prefixes)
