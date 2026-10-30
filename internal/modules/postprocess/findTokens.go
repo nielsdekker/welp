@@ -25,7 +25,7 @@ var tokenRegexes = []struct {
 	{regexp.MustCompile(`^sk-[\w]+`), "token openAI"},
 
 	// Generic
-	{regexp.MustCompile(`^Bearer [\w-\/=]+`), "token bearer token"},
+	{regexp.MustCompile(`^Bearer [\w-\/=]+`), "token bearer"},
 	{regexp.MustCompile(`^(e[wy][\w-]+\.){2}[\w-]+`), "token jwt"},
 }
 

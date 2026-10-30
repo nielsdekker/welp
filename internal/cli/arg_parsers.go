@@ -125,6 +125,8 @@ var argParsers = map[string]func(*Options, []string) error{
 			switch script {
 			case "token":
 				o.Scripts = append(o.Scripts, postprocess.NewFindTokens())
+			default:
+				return fmt.Errorf("Unknown script value passed: %s", script)
 			}
 		}
 
