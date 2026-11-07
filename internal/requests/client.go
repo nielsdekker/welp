@@ -8,8 +8,8 @@ import (
 )
 
 type Client struct {
-	client            http.Client
-	additionalHeaders map[string]string
+	HttpClient        http.Client
+	AdditionalHeaders map[string]string
 }
 
 func NewClient(
@@ -45,15 +45,15 @@ func NewClient(
 	}
 
 	return Client{
-		client:            client,
-		additionalHeaders: additionalHeaders,
+		HttpClient:        client,
+		AdditionalHeaders: additionalHeaders,
 	}
 }
 
 func (t *Client) Do(req *http.Request) (*http.Response, error) {
-	for k, v := range t.additionalHeaders {
+	for k, v := range t.AdditionalHeaders {
 		req.Header.Add(k, v)
 	}
 
-	return t.client.Do(req)
+	return t.HttpClient.Do(req)
 }
