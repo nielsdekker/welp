@@ -19,6 +19,7 @@ type Options struct {
 	FilterCodes       []int
 	FilterContentType []string
 	Scripts           []modules.PostProcessModule
+	AdditionalHeaders map[string]string
 }
 
 func (o *Options) IsValid() []error {

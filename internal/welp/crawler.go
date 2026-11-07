@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/nielsdekker/welp/internal/modules"
+	"github.com/nielsdekker/welp/internal/requests"
 	"github.com/nielsdekker/welp/internal/tree"
 )
 
@@ -16,7 +17,7 @@ const MB = int64(1024 * 1024)
 func crawl(
 	ctx context.Context,
 	target string,
-	client http.Client,
+	client requests.Client,
 ) (modules.Result, error) {
 	result := modules.Result{
 		Origin:       target,

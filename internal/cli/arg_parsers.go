@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/nielsdekker/welp/internal/modules/postprocess"
 )
@@ -18,19 +19,21 @@ const ARG_FILTER_CODE = "--filter-code"
 const ARG_FILTER_TYPE = "--filter-type"
 const ARG_FOLLOW_REDIRECT = "--follow-redirect"
 const ARG_SCRIPTS = "--scripts"
+const ARG_HEADER = "--header"
 
 // Mapping between shorthand to longhand form
 var mapping = map[string]string{
-	"-h":  ARG_HELP,
-	"-u":  ARG_URL,
-	"-p":  ARG_PREFIX,
-	"-t":  ARG_THREADS,
+	"-H":  ARG_HEADER,
 	"-d":  ARG_MAX_DEPTH,
-	"-r":  ARG_FOLLOW_REDIRECT,
-	"-k":  ARG_INSECURE,
 	"-fc": ARG_FILTER_CODE,
 	"-ft": ARG_FILTER_TYPE,
+	"-h":  ARG_HELP,
+	"-k":  ARG_INSECURE,
+	"-p":  ARG_PREFIX,
+	"-r":  ARG_FOLLOW_REDIRECT,
 	"-sc": ARG_SCRIPTS,
+	"-t":  ARG_THREADS,
+	"-u":  ARG_URL,
 }
 
 var argParsers = map[string]func(*Options, []string) error{
@@ -128,6 +131,22 @@ var argParsers = map[string]func(*Options, []string) error{
 			default:
 				return fmt.Errorf("Unknown script value passed: %s", script)
 			}
+		}
+
+		return nil
+	},
+	ARG_HEADER: func(o *Options, s []string) error {
+		if len(s) == 0 {
+			return fmt.Errorf("Expected one or more values for the header argument")
+		}
+
+		for _, rawHeader := range s {
+			splitted := strings.Split(rawHeader, ":")
+			if len(splitted) != 2 {
+				return fmt.Errorf("Headers should be passed in the 'Key: value' syntax, got %s", rawHeader)
+			}
+
+			o.AdditionalHeaders[splitted[0]] = splitted[1]
 		}
 
 		return nil

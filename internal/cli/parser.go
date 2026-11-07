@@ -78,11 +78,12 @@ func Parse(args []string) (Options, error) {
 	// Apply the args
 	opt := &Options{
 		// Defaults
-		SSLIgnore:      false,
-		Prefixes:       map[string]struct{}{},
-		NumWorkers:     10,
-		SearchDepth:    25,
-		FollowRedirect: false,
+		SSLIgnore:         false,
+		Prefixes:          map[string]struct{}{},
+		NumWorkers:        10,
+		SearchDepth:       25,
+		FollowRedirect:    false,
+		AdditionalHeaders: map[string]string{},
 	}
 
 	for k, v := range parsedArgs {
