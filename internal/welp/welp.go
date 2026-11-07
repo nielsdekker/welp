@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
-	"net/http"
 	"slices"
 	"sync"
 	"time"
@@ -12,11 +11,12 @@ import (
 	"github.com/nielsdekker/welp/internal/cli"
 	"github.com/nielsdekker/welp/internal/modules"
 	"github.com/nielsdekker/welp/internal/queue"
+	"github.com/nielsdekker/welp/internal/requests"
 )
 
 type Welp struct {
 	options              cli.Options
-	requestPool          http.Client
+	requestPool          requests.Client
 	resultFilterModules  []modules.ResultFilterModule
 	requestFilterModules []modules.RequestFilterModule
 	postProcessModules   []modules.PostProcessModule
@@ -25,7 +25,7 @@ type Welp struct {
 
 func New(
 	options cli.Options,
-	requestPool http.Client,
+	requestPool requests.Client,
 	resultFilterModules []modules.ResultFilterModule,
 	requestFilterModules []modules.RequestFilterModule,
 	postProcessModules []modules.PostProcessModule,

@@ -33,7 +33,11 @@ func main() {
 
 	banner(opt)
 
-	requestPool := requests.NewClient(opt.SSLIgnore, opt.FollowRedirect)
+	requestPool := requests.NewClient(
+		opt.SSLIgnore,
+		opt.FollowRedirect,
+		opt.AdditionalHeaders,
+	)
 	w := welp.New(
 		opt,
 		requestPool,

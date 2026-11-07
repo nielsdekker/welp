@@ -3,27 +3,27 @@ package requests
 import (
 	"crypto/tls"
 	"net/http"
+	"strings"
 	"time"
 )
 
-type transport struct {
-	base http.RoundTripper
+type Client struct {
+	HttpClient        http.Client
+	AdditionalHeaders map[string]string
 }
 
-func NewClient(ignoreSSL bool, followRedirects bool) http.Client {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{
+func NewClient(
+	ignoreSSL bool,
+	followRedirects bool,
+	additionalHeaders map[string]string,
+) Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = &tls.Config{
 		InsecureSkipVerify: ignoreSSL,
 	}
-
 	client := http.Client{
-		Timeout: 5 * time.Second,
-		Transport: &transport{
-			base: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: ignoreSSL,
-				},
-			},
-		},
+		Timeout:   5 * time.Second,
+		Transport: transport,
 	}
 
 	if !followRedirects {
@@ -32,10 +32,28 @@ func NewClient(ignoreSSL bool, followRedirects bool) http.Client {
 		}
 	}
 
-	return client
+	// Add user agent if not set
+	foundUserAgent := false
+	for k, _ := range additionalHeaders {
+		if strings.ToLower(k) == "user-agent" {
+			foundUserAgent = true
+			break
+		}
+	}
+	if !foundUserAgent {
+		additionalHeaders["User-Agent"] = "Welp"
+	}
+
+	return Client{
+		HttpClient:        client,
+		AdditionalHeaders: additionalHeaders,
+	}
 }
 
-func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Add("User-Agent", "welp")
-	return t.base.RoundTrip(req)
+func (t *Client) Do(req *http.Request) (*http.Response, error) {
+	for k, v := range t.AdditionalHeaders {
+		req.Header.Add(k, v)
+	}
+
+	return t.HttpClient.Do(req)
 }

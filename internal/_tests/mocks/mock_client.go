@@ -10,11 +10,13 @@ import (
 	"os"
 	"path"
 	"time"
+
+	"github.com/nielsdekker/welp/internal/requests"
 )
 
 //go:embed resources
 var resources embed.FS
-var HttpClient http.Client = createClient()
+var HttpClient requests.Client = createClient()
 
 type mockTransport struct {
 	// Each mock resource will be mapped to it's own hostname. For example the
@@ -22,7 +24,7 @@ type mockTransport struct {
 	hosts map[string]*http.ServeMux
 }
 
-func createClient() http.Client {
+func createClient() requests.Client {
 	transport := &mockTransport{
 		hosts: make(map[string]*http.ServeMux),
 	}
@@ -48,9 +50,12 @@ func createClient() http.Client {
 		transport.hosts[name+".test"] = toMux(name, sub)
 	}
 
-	return http.Client{
-		Timeout:   100 * time.Millisecond,
-		Transport: transport,
+	return requests.Client{
+		HttpClient: http.Client{
+			Timeout:   100 * time.Millisecond,
+			Transport: transport,
+		},
+		AdditionalHeaders: map[string]string{},
 	}
 }
 
