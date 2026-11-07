@@ -143,7 +143,7 @@ var argParsers = map[string]func(*Options, []string) error{
 		for _, rawHeader := range s {
 			splitted := strings.Split(rawHeader, ":")
 			if len(splitted) != 2 {
-				return fmt.Errorf("Headers should be passed in the 'Key: value' syntax, got %s", rawHeader)
+				return fmt.Errorf("Headers should be passed in the 'Key: value' syntax, got \"%s\"", rawHeader)
 			}
 
 			o.AdditionalHeaders[splitted[0]] = splitted[1]
